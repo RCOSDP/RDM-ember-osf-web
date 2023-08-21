@@ -29,6 +29,7 @@ export type SchemaBlockType =
     'date-input' |
     'file-capacity-input' |
     'file-creators-input' |
+    'file-title-input' |
     'file-url-input' |
     'file-institution-ja-input' |
     'file-institution-en-input' |
