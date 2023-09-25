@@ -44,6 +44,7 @@ export interface SchemaBlock {
     helpText?: string;
     exampleText?: string;
     required?: boolean;
+    conditionalRequired?: string;
     default?: boolean;
     index?: number;
     pattern?: string;

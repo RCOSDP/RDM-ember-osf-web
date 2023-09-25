@@ -3,11 +3,13 @@ import { set } from '@ember/object';
 import { ValidationObject, ValidatorFunction } from 'ember-changeset-validations';
 import { validateFormat, validatePresence } from 'ember-changeset-validations/validators';
 
+import { ValidationResult } from 'ember-changeset-validations/utils/validation-errors';
+import { ChangesetDef } from 'ember-changeset/types';
 import DraftRegistration, { DraftMetadataProperties } from 'ember-osf-web/models/draft-registration';
 import NodeModel, { NodeLicense } from 'ember-osf-web/models/node';
 import { RegistrationResponse } from 'ember-osf-web/packages/registration-schema';
 import { SchemaBlockGroup } from 'ember-osf-web/packages/registration-schema/schema-block-group';
-import { validateFileList } from 'ember-osf-web/validators/validate-response-format';
+import { validateConditionalRequired, validateFileList } from 'ember-osf-web/validators/validate-response-format';
 
 export const NodeLicenseFields: Record<keyof NodeLicense, string> = {
     copyrightHolders: 'Copyright Holders',
@@ -55,6 +57,11 @@ export function buildValidation(groups: SchemaBlockGroup[], node?: NodeModel) {
                     validateFileList(responseKey as string, node),
                 );
             }
+            if (inputBlock.conditionalRequired) {
+                validationForResponse.push(
+                    validateConditionalRequired(inputBlock.conditionalRequired, groups),
+                );
+            }
             if (inputBlock.pattern) {
                 const key = (group.registrationResponseKey || '').substr('__responseKey_'.length);
                 validationForResponse.push(
@@ -81,6 +88,47 @@ export function buildValidation(groups: SchemaBlockGroup[], node?: NodeModel) {
         }
     });
     return ret;
+}
+
+export function setupEventForSyncValidation(changeset: ChangesetDef, groups: SchemaBlockGroup[]) {
+    const conditionalRequiredGroups = groups
+        // ignore GRDM file specific fields
+        .filter((group: SchemaBlockGroup) => !group.registrationResponseKey
+            || !group.registrationResponseKey.match(/^__responseKey_grdm-file:.+$/))
+        .filter((group: SchemaBlockGroup) => group.inputBlock && group.inputBlock.conditionalRequired);
+    changeset.on('afterValidation', (key: string) => {
+        conditionalRequiredGroups
+            .forEach(group => {
+                if (`__responseKey_${group.inputBlock!.conditionalRequired}` !== key) {
+                    return;
+                }
+                const errors = changeset.get('errors');
+                const otherKey = group.registrationResponseKey as string;
+                const contextCurrentValue = changeset.get(key);
+                const validationErrors = errors
+                    .filter((error: any) => error.key === otherKey)
+                    .flatMap((error: any) => error.validation as Array<string | ValidationResult>)
+                    .filter(
+                        (result: string | ValidationResult): result is ValidationResult => typeof result === 'object',
+                    )
+                    .filter(
+                        (result: ValidationResult) => result.context.type === 'invalid_conditional_required',
+                    );
+                const validatedContextValues: Array<{[key: string]: any}> = validationErrors
+                    .filter((result: ValidationResult) => typeof result.value === 'object')
+                    .map((result: ValidationResult) => result.value as {[key: string]: any});
+                const existMismatchError = validatedContextValues.some(
+                    values => values[key] !== contextCurrentValue,
+                );
+                if (existMismatchError) {
+                    changeset.validate(otherKey);
+                    return;
+                }
+                if (!contextCurrentValue && !validatedContextValues.filter(values => !values[key]).length) {
+                    changeset.validate(otherKey);
+                }
+            });
+    });
 }
 
 export function validateNodeLicense() {
