@@ -1,4 +1,3 @@
-import ArrayProxy from '@ember/array/proxy';
 import Component from '@ember/component';
 import EmberError from '@ember/error';
 import { action, computed } from '@ember/object';
@@ -8,10 +7,9 @@ import DS from 'ember-data';
 import Intl from 'ember-intl/services/intl';
 import { requiredAction } from 'ember-osf-web/decorators/component';
 import BinderHubConfigModel, { Image } from 'ember-osf-web/models/binderhub-config';
-import FileModel from 'ember-osf-web/models/file';
 import Node from 'ember-osf-web/models/node';
 import CurrentUser from 'ember-osf-web/services/current-user';
-import getHref from 'ember-osf-web/utils/get-href';
+import { WaterButlerFile } from 'ember-osf-web/utils/waterbutler/base';
 import md5 from 'js-md5';
 
 const REPO2DOCKER_IMAGE_ID = '#repo2docker';
@@ -24,6 +22,7 @@ enum DockerfileProperty {
     RMran,
     RCran,
     RGitHub,
+    Mpm,
     PostBuild,
     NoChanges,
 }
@@ -57,6 +56,47 @@ function parsePipPackageId(id: string) {
     return parseCondaPackageId(id);
 }
 
+function parseMpmConfig(content: string|undefined|null) {
+    const lines = (content || '').split('\n');
+    let release = null;
+    for (const line of lines) {
+        const m = line.match(/\s*release\s*:\s*(\S+)\s*$/);
+        if (!m) {
+            continue;
+        }
+        // eslint-disable-next-line prefer-destructuring
+        release = m[1];
+    }
+    let section = '';
+    let deps: string[] | null = null;
+    for (const line of lines) {
+        if (line.trim().startsWith('#')) {
+            continue;
+        }
+        const sectionm = line.match(/\s*(\S+):\s*$/);
+        if (sectionm) {
+            // eslint-disable-next-line prefer-destructuring
+            section = sectionm[1];
+            continue;
+        }
+        if (section !== 'products') {
+            continue;
+        }
+        const itemm = line.match(/\s*-\s*(\S+)\s*$/);
+        if (!itemm) {
+            continue;
+        }
+        if (!deps) {
+            deps = [];
+        }
+        deps.push(itemm[1]);
+    }
+    return {
+        release,
+        products: deps,
+    };
+}
+
 function getRCranScript(packageId: string[]) {
     const name = packageId[0];
     const version = packageId[1] || '';
@@ -76,6 +116,12 @@ function getRMranScript(packageId: string[]) {
     return `install.packages("${name}")`;
 }
 
+function getMpmScript(release: string|null, products: string[]|null) {
+    const releaseLine = release ? `release: ${release}\n` : '';
+    const content = `${releaseLine}products:\n`;
+    return content + (products || []).map(item => `- ${item}`).join('\n');
+}
+
 function removeQuotes(item: string) {
     const m = item.match(/^\s*"(.*)"\s*/);
     if (!m) {
@@ -86,12 +132,12 @@ function removeQuotes(item: string) {
 
 interface ConfigurationFile {
     name: string;
-    property: 'dockerfile' | 'environment' | 'requirements' | 'apt' | 'installR' | 'postBuild';
+    property: 'dockerfile' | 'environment' | 'requirements' | 'apt' | 'installR' | 'mpm' | 'postBuild';
     modelProperty: 'dockerfileModel' | 'environmentModel' | 'requirementsModel' | 'aptModel' | 'installRModel' |
-        'postBuildModel';
+        'mpmModel' | 'postBuildModel';
     changedProperty: 'dockerfileManuallyChanged' | 'environmentManuallyChanged' |
         'requirementsManuallyChanged' | 'aptManuallyChanged' | 'installRManuallyChanged' |
-        'postBuildManuallyChanged';
+        'mpmManuallyChanged' | 'postBuildManuallyChanged';
 }
 
 interface ImageURL {
@@ -114,19 +160,21 @@ export default class ProjectEditor extends Component {
 
     binderHubConfig: DS.PromiseObject<BinderHubConfigModel> & BinderHubConfigModel = this.binderHubConfig;
 
-    configFolder: FileModel = this.configFolder;
+    configFolder: WaterButlerFile = this.configFolder;
 
-    dockerfileModel: FileModel | null = this.dockerfileModel;
+    dockerfileModel: WaterButlerFile | null = this.dockerfileModel;
 
-    environmentModel: FileModel | null = this.environmentModel;
+    environmentModel: WaterButlerFile | null = this.environmentModel;
 
-    requirementsModel: FileModel | null = this.requirementsModel;
+    requirementsModel: WaterButlerFile | null = this.requirementsModel;
 
-    aptModel: FileModel | null = this.aptModel;
+    aptModel: WaterButlerFile | null = this.aptModel;
 
-    installRModel: FileModel | null = this.installRModel;
+    installRModel: WaterButlerFile | null = this.installRModel;
 
-    postBuildModel: FileModel | null = this.postBuildModel;
+    mpmModel: WaterButlerFile | null = this.mpmModel;
+
+    postBuildModel: WaterButlerFile | null = this.postBuildModel;
 
     showResetDockerfileConfirmDialog = false;
 
@@ -146,6 +194,8 @@ export default class ProjectEditor extends Component {
 
     installR: string | undefined = undefined;
 
+    mpm: string | undefined = undefined;
+
     postBuild: string | undefined = undefined;
 
     editingPostBuild: string | undefined = undefined;
@@ -157,10 +207,10 @@ export default class ProjectEditor extends Component {
     @requiredAction onError!: (exception: any, message: string) => void;
 
     didReceiveAttrs() {
-        if (!this.configFolder || this.configFolder.get('path') === this.loadingPath) {
+        if (!this.configFolder || this.configFolder.path === this.loadingPath) {
             return;
         }
-        this.loadingPath = this.configFolder.get('path');
+        this.loadingPath = this.configFolder.path;
         later(async () => {
             try {
                 await this.loadCurrentConfig();
@@ -235,6 +285,16 @@ export default class ProjectEditor extends Component {
             return false;
         }
         const content = this.get('installR');
+        return this.verifyHashHeader(content);
+    }
+
+    @computed('mpm', 'environment')
+    get mpmManuallyChanged() {
+        const env = this.get('environment');
+        if (!env) {
+            return false;
+        }
+        const content = this.get('mpm');
         return this.verifyHashHeader(content);
     }
 
@@ -426,6 +486,27 @@ export default class ProjectEditor extends Component {
         return `# rdm-binderhub:hash:${checksum}\n${content}`;
     }
 
+    getUpdatedMpm(key: DockerfileProperty, value: string) {
+        // Update mpm.yml with MD5 hash
+        const url = key === DockerfileProperty.From ? value : this.selectedImageUrl;
+        if (this.parseImageURL(url).url !== REPO2DOCKER_IMAGE_ID) {
+            return '';
+        }
+        const image = this.findImageByUrl(url);
+        if (!image.packages || !image.packages.includes('mpm')) {
+            return '';
+        }
+        const config = key === DockerfileProperty.Mpm
+            ? parseMpmConfig(value)
+            : this.mpmConfig;
+        if (config === null || (config.release === null && config.products === null)) {
+            return '';
+        }
+        const content = getMpmScript(config.release, config.products);
+        const checksum = md5(content.trim());
+        return `# rdm-binderhub:hash:${checksum}\n${content}`;
+    }
+
     getUpdatedPostBuild(key: DockerfileProperty, value: string): string {
         if (key === DockerfileProperty.PostBuild) {
             return value;
@@ -439,7 +520,6 @@ export default class ProjectEditor extends Component {
             return;
         }
         const props = this.getUpdatedProperties(key, value);
-
         later(async () => {
             try {
                 await this.saveCurrentConfig(props);
@@ -554,6 +634,15 @@ export default class ProjectEditor extends Component {
             return false;
         }
         return image.packages.includes('rmran');
+    }
+
+    @computed('selectedImage')
+    get mpmSupported() {
+        const image = this.get('selectedImage');
+        if (image === null || !image.packages) {
+            return false;
+        }
+        return image.packages.includes('mpm');
     }
 
     @computed('dockerfileStatements', 'aptLines')
@@ -897,6 +986,18 @@ export default class ProjectEditor extends Component {
             .filter(item => item.length > 0 && !item.startsWith('#'));
     }
 
+    @computed('mpm')
+    get mpmConfig() {
+        if (this.mpmManuallyChanged) {
+            return null;
+        }
+        const content = this.get('mpm');
+        if (!content) {
+            return null;
+        }
+        return parseMpmConfig(content);
+    }
+
     @computed('node')
     get nodeFilesLink() {
         if (!this.node) {
@@ -955,6 +1056,12 @@ export default class ProjectEditor extends Component {
                 changedProperty: 'installRManuallyChanged',
             },
             {
+                name: 'mpm.yml',
+                property: 'mpm',
+                modelProperty: 'mpmModel',
+                changedProperty: 'mpmManuallyChanged',
+            },
+            {
                 name: 'postBuild',
                 property: 'postBuild',
                 modelProperty: 'postBuildModel',
@@ -966,7 +1073,7 @@ export default class ProjectEditor extends Component {
     @computed(
         'dockerfileManuallyChanged', 'environmentManuallyChanged',
         'requirementsManuallyChanged', 'aptManuallyChanged',
-        'installRManuallyChanged', 'postBuildManuallyChanged',
+        'installRManuallyChanged', 'mpmManuallyChanged', 'postBuildManuallyChanged',
     )
     get dirtyConfigurationFiles(): ConfigurationFile[] {
         return this.get('configurationFiles').filter(file => this.get(file.changedProperty));
@@ -980,14 +1087,14 @@ export default class ProjectEditor extends Component {
         if (reload) {
             configFolder = await configFolder.reload();
         }
-        const files = await this.configFolder.get('files');
+        const files = await this.configFolder.files;
         if (!files) {
             return null;
         }
         return files;
     }
 
-    async getFile(name: string, files: ArrayProxy<FileModel> | null) {
+    async getFile(name: string, files: WaterButlerFile[] | null) {
         if (files === null) {
             return null;
         }
@@ -999,7 +1106,7 @@ export default class ProjectEditor extends Component {
         return envFile;
     }
 
-    async loadCurrentFile(file: ConfigurationFile, files: ArrayProxy<FileModel> | null) {
+    async loadCurrentFile(file: ConfigurationFile, files: WaterButlerFile[] | null) {
         const envFile = await this.getFile(file.name, files);
         if (!envFile) {
             this.set(file.modelProperty, null);
@@ -1019,7 +1126,7 @@ export default class ProjectEditor extends Component {
     }
 
     async saveCurrentFile(
-        file: ConfigurationFile, files: ArrayProxy<FileModel> | null,
+        file: ConfigurationFile, files: WaterButlerFile[] | null,
         props: { [key: string]: string; },
     ) {
         const content: string | undefined = props[file.property];
@@ -1033,11 +1140,7 @@ export default class ProjectEditor extends Component {
             if (!envFile) {
                 return false;
             }
-            await this.currentUser.authenticatedAJAX({
-                url: `${getHref(envFile.links.delete)}`,
-                type: 'DELETE',
-                xhrFields: { withCredentials: true },
-            });
+            await envFile.delete();
             return true;
         }
         if (!envFile) {
@@ -1075,12 +1178,7 @@ export default class ProjectEditor extends Component {
         if (!fileModel) {
             throw new EmberError('Illegal config');
         }
-        const links = fileModel.get('links');
-        await this.currentUser.authenticatedAJAX({
-            url: getHref(links.delete),
-            type: 'DELETE',
-            xhrFields: { withCredentials: true },
-        });
+        await fileModel.delete();
         this.set(configFile.modelProperty, null);
         this.set(configFile.property, '');
     }
@@ -1108,6 +1206,7 @@ export default class ProjectEditor extends Component {
         props.requirements = '';
         props.apt = this.getUpdatedApt(key, value);
         props.installR = this.getUpdatedInstallR(key, value);
+        props.mpm = this.getUpdatedMpm(key, value);
         props.postBuild = this.getUpdatedPostBuild(key, value);
         return props;
     }
@@ -1171,6 +1270,14 @@ export default class ProjectEditor extends Component {
         );
     }
 
+    @action
+    mpmUpdated(this: ProjectEditor, config: {release: string | null, products: string[] | null}) {
+        this.updateFiles(
+            DockerfileProperty.Mpm,
+            getMpmScript(config.release, config.products),
+        );
+    }
+
     @computed('editingPostBuild')
     get editedPostBuild() {
         return this.editingPostBuild !== undefined && this.editingPostBuild !== this.postBuild;
@@ -1211,7 +1318,7 @@ export default class ProjectEditor extends Component {
         if (!fileModel) {
             throw new EmberError('Illegal config');
         }
-        const fileUrl = fileModel.get('links').html as string;
+        const fileUrl = fileModel.htmlURL;
         window.open(fileUrl, '_blank');
     }
 
