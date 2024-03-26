@@ -1867,3 +1867,6 @@ metadata:
             log: '操作ログ'
         export_target:
             description: 'エクスポート先を選択してください。'
+    array-input:
+        add-item: 'アイテム追加'
+        remove-item: 'アイテム削除'

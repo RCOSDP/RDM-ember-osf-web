@@ -1867,3 +1867,6 @@ metadata:
             log: 'Action Logs'
         export_target:
             description: 'Select a destination.'
+    array-input:
+        add-item: 'Add item'
+        remove-item: 'Remove item'
