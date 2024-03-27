@@ -12,6 +12,9 @@ declare global {
     interface HTMLElement {
         getAttributeNames(): string[];
     }
+    interface Window {
+        traceId: string;
+    }
 }
 
 export {};
