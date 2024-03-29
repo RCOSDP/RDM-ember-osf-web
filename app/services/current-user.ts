@@ -166,6 +166,9 @@ export default class CurrentUserService extends Service {
         if (csrfToken) {
             headers['X-CSRFToken'] = csrfToken;
         }
+        if (window.xAmznTraceId) {
+            headers["X-Amzn-Trace-Id"] = window.xAmznTraceId;
+        }
         return headers;
     }
 
