@@ -13,7 +13,7 @@ declare global {
         getAttributeNames(): string[];
     }
     interface Window {
-        traceId: string;
+        xAmznTraceId: string;
     }
 }
 
