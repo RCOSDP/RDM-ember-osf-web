@@ -33,6 +33,7 @@ import { userNodeList } from './views/user';
 import { updatePassword } from './views/user-password';
 import * as userSettings from './views/user-setting';
 import * as wb from './views/wb';
+import { webmeetingsConfig } from './views/webmeetings-config';
 
 const { OSF: { apiUrl, url } } = config;
 
@@ -259,6 +260,7 @@ export default function(this: Server) {
     this.get('/project/:id/binderhub/config', binderhubConfig);
     this.get('/project/:id/metadata/erad/candidates', metadataNodeErad);
     this.get('/project/:id/metadata/project', metadataNodeProject);
+    this.get('/project/:id/webmeetings/config', webmeetingsConfig);
 
     this.urlPrefix = apiUrl;
     this.namespace = apiNamespace;
