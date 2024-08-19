@@ -19,7 +19,7 @@ export default class UserSerializer extends OsfSerializer {
             result.data.relationships!.sparseNodes = {
                 links: {
                     related: {
-                        href: `${apiUrl}/${apiNamespace}/sparse/users/${resourceHash.id}/nodes`,
+                        href: `${apiUrl}/${apiNamespace}/sparse/users/${resourceHash.id}/nodes/`,
                     },
                 },
             };
