@@ -66,7 +66,7 @@ export default class ContributorList extends Component {
                     fields: {
                         users: 'full_name, given_name, family_name, id, links',
                     },
-                    page: { size: 3 },
+                    page: { size: 10 },
                 },
             );
             this.setProperties({
