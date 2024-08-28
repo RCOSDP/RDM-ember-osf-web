@@ -88,7 +88,6 @@ export default class Dashboard extends Controller {
 
         const nodes: QueryHasManyResult<Node> = yield user.queryHasMany('sparseNodes', {
             embed: ['parent', 'root'],
-            // eslint-disable-next-line ember/no-global-jquery
             fields: {
                 users: 'full_name, given_name, middle_names, family_name',
                 'sparse-nodes': 'id,title, date_modified, bibliographic_contributors, parent, root, creator',
