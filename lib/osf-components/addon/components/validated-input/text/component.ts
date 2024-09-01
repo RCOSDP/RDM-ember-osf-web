@@ -5,6 +5,7 @@ import defaultTo from 'ember-osf-web/utils/default-to';
 
 import BaseValidatedComponent from '../base-component';
 import template from './template';
+import { action } from '@ember/object';
 
 @layout(template)
 export default class ValidatedText<M extends DS.Model> extends BaseValidatedComponent<M> {
@@ -14,4 +15,16 @@ export default class ValidatedText<M extends DS.Model> extends BaseValidatedComp
     password: boolean = defaultTo(this.password, false);
     onKeyUp?: () => void; // Action
     onChange?: () => void; // Action
+
+    title?: string = this.title;
+
+    @action
+    getTitle(){
+        this.set('value', this.title);
+    }
+
+    @action
+    getDate(){
+        this.set('value',  new Date().getFullYear() +'-'+ String(new Date().getMonth()+1).padStart(2, '0') +'-'+ String(new Date().getDate()).padStart(2, '0'));
+    }
 }

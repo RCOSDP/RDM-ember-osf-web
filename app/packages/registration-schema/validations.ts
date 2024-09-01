@@ -58,9 +58,22 @@ export function buildValidation(groups: SchemaBlockGroup[], node?: NodeModel) {
                 );
             }
             if (inputBlock.requiredIf) {
-                validationForResponse.push(
-                    validateRequiredIf(inputBlock.requiredIf, groups),
-                );
+                if(inputBlock.requiredIf.startsWith('{') && inputBlock.requiredIf.endsWith('}')){
+                    const jsonString = inputBlock.requiredIf.replace(/'/g, '"');
+                    const requiredIfObject = JSON.parse(jsonString);
+                    const requiredIf = Object.keys(requiredIfObject)[0];
+                    const requiredIf_value = requiredIfObject[requiredIf];
+                    console.log('requiredIf > '+requiredIf);
+                    console.log('requiredIf_value > '+requiredIf_value);
+                    validationForResponse.push(
+                        validateRequiredIf(requiredIf, requiredIf_value, groups),
+                    );
+                }else{
+                    validationForResponse.push(
+                        validateRequiredIf(inputBlock.requiredIf, '', groups),
+                    );
+                }
+
             }
             if (inputBlock.pattern) {
                 const key = (group.registrationResponseKey || '').substr('__responseKey_'.length);
@@ -99,12 +112,29 @@ export function setupEventForSyncValidation(changeset: ChangesetDef, groups: Sch
     changeset.on('afterValidation', (key: string) => {
         requiredIfGroups
             .forEach(group => {
-                if (`__responseKey_${group.inputBlock!.requiredIf}` !== key) {
+                var requiredIf, requiredIf_value, condition , message_type: string;
+                const contextCurrentValue = changeset.get(key);
+
+                if(group.inputBlock!.requiredIf!.startsWith('{') && group.inputBlock!.requiredIf!.endsWith('}')){
+                    const jsonString = group.inputBlock!.requiredIf!.replace(/'/g, '"');
+                    const requiredIfObject = JSON.parse(jsonString);
+                    requiredIf = Object.keys(requiredIfObject)[0];
+                    requiredIf_value = requiredIfObject[requiredIf];
+
+                    message_type = 'invalid_required_if_object';
+                    condition = !contextCurrentValue || contextCurrentValue === requiredIf_value;
+
+                }else{
+                    requiredIf = group.inputBlock!.requiredIf;
+                    message_type = 'invalid_required_if';
+                    condition = !contextCurrentValue;
+                }
+
+                if (`__responseKey_${requiredIf}` !== key) {
                     return;
                 }
                 const errors = changeset.get('errors');
                 const otherKey = group.registrationResponseKey as string;
-                const contextCurrentValue = changeset.get(key);
                 const validationErrors = errors
                     .filter((error: any) => error.key === otherKey)
                     .flatMap((error: any) => error.validation as Array<string | ValidationResult>)
@@ -112,7 +142,7 @@ export function setupEventForSyncValidation(changeset: ChangesetDef, groups: Sch
                         (result: string | ValidationResult): result is ValidationResult => typeof result === 'object',
                     )
                     .filter(
-                        (result: ValidationResult) => result.context.type === 'invalid_required_if',
+                        (result: ValidationResult) => result.context.type === message_type,
                     );
                 const validatedContextValues: Array<{[key: string]: any}> = validationErrors
                     .filter((result: ValidationResult) => typeof result.value === 'object')
@@ -124,7 +154,8 @@ export function setupEventForSyncValidation(changeset: ChangesetDef, groups: Sch
                     changeset.validate(otherKey);
                     return;
                 }
-                if (!contextCurrentValue && !validatedContextValues.filter(values => !values[key]).length) {
+
+                if ((condition) && !validatedContextValues.filter(values => !values[key]).length) {
                     changeset.validate(otherKey);
                 }
             });

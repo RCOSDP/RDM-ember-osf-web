@@ -43,6 +43,7 @@ export function getSchemaBlockGroups(blocks: SchemaBlock[] | undefined) {
             case 'jgn-program-name-ja-input':
             case 'jgn-program-name-en-input':
             case 'e-rad-award-funder-input':
+            case 'pulldown-input':
             case 'e-rad-award-number-input':
             case 'e-rad-award-title-ja-input':
             case 'e-rad-award-title-en-input':
