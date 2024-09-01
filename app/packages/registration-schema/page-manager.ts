@@ -17,12 +17,14 @@ export class PageManager {
     changeset?: ChangesetDef;
     schemaBlockGroups?: SchemaBlockGroup[];
     pageHeadingText?: string;
+    hideProjectmetadata?: boolean;
     isVisited?: boolean;
 
     constructor(pageSchemaBlocks: SchemaBlock[], registrationResponses: RegistrationResponse, node?: NodeModel) {
         this.schemaBlockGroups = getSchemaBlockGroups(pageSchemaBlocks);
         if (this.schemaBlockGroups) {
             this.pageHeadingText = this.schemaBlockGroups[0].labelBlock!.displayText!;
+            this.hideProjectmetadata = this.schemaBlockGroups[0].labelBlock!.hideProjectmetadata!;
 
             this.isVisited = this.schemaBlockGroups.some(
                 ({ registrationResponseKey: key }) => Boolean(key && (key in registrationResponses)),

@@ -1,6 +1,7 @@
 {{#validated-input/x-input-wrapper
     model=this.model
     changeset=this.changeset
+    title=this.title
     errors=this.errors
     label=this.label
     valuePath=this.valuePath
@@ -19,4 +20,22 @@
         @change={{@onChange}}
         @disabled={{this.disabled}}
     />
+
+    {{#if @autoTitle}}
+        <OsfButton
+            @type='success'
+            @onClick={{action this.getTitle}}
+        >
+            {{t 'registries.drafts.draft.form.auto_button_label'}}
+        </OsfButton>
+    {{/if}}
+
+    {{#if @autoDate}}
+        <OsfButton
+            @type='success'
+            @onClick={{action this.getDate}}
+        >
+            {{t 'registries.drafts.draft.form.auto_button_label'}}
+        </OsfButton>
+    {{/if}}
 {{/validated-input/x-input-wrapper}}

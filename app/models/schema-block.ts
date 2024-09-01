@@ -22,6 +22,9 @@ export default class SchemaBlockModel extends OsfModel implements SchemaBlock {
     @attr('number') index?: number;
     @attr('string') pattern?: string;
     @attr('boolean') spaceNormalization?: boolean;
+    @attr('boolean') autoDate?: boolean;
+    @attr('boolean') autoTitle?: boolean;
+    @attr('boolean') hideProjectmetadata?: boolean;
 
     @belongsTo('registration-schema', { inverse: 'schemaBlocks', async: false })
     schema?: RegistrationSchemaModel;

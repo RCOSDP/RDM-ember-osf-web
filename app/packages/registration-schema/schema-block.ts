@@ -17,6 +17,7 @@ export type SchemaBlockType =
     'jgn-program-name-ja-input' |
     'jgn-program-name-en-input' |
     'e-rad-award-funder-input' |
+    'pulldown-input' |
     'e-rad-award-number-input' |
     'e-rad-award-title-ja-input' |
     'e-rad-award-title-en-input' |
@@ -26,7 +27,8 @@ export type SchemaBlockType =
     'e-rad-researcher-name-en-input' |
     'e-rad-bunnya-input' |
     'file-metadata-input' |
-    'date-input';
+    'date-input' |
+    'array-input';
 
 export interface SchemaBlock {
     id?: string;
@@ -42,4 +44,7 @@ export interface SchemaBlock {
     index?: number;
     pattern?: string;
     spaceNormalization?: boolean;
+    autoDate?: boolean;
+    autoTitle?: boolean;
+    hideProjectmetadata?: boolean;
 }
