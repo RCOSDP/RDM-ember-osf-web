@@ -21,6 +21,8 @@ export type Format = ExportTarget;
 
 export interface Destination extends ExportTarget {
     url: string | null;
+    provider: string | null;
+    folder: string | null;
 }
 
 export default class MetadataNodeSchemaModel extends OsfModel {
