@@ -1852,6 +1852,8 @@ metadata:
         export-dialog:
             title: 'エクスポート形式の選択'
             description: '出力したいエクスポート形式を選択してください。'
+            addons:
+                weko: 'リポジトリ (WEKO)に登録 - {folder}'
     package:
         page_title: 'プロジェクトのエクスポート'
         header: 'プロジェクトのエクスポート'

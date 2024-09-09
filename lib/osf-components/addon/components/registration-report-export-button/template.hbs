@@ -24,7 +24,7 @@
                 {{#each this.metadataDestinations as |destination|}}
                     <option
                         value='{{destination.id}}'>
-                        {{destination.name}}
+                        {{t (concat 'metadata.registration-card.export-dialog.addons.' destination.provider) folder=destination.folder}}
                     </option>
                 {{/each}}
             </select>
