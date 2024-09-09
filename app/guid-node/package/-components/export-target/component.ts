@@ -2,10 +2,14 @@ import Component from '@ember/component';
 import EmberError from '@ember/error';
 import { action } from '@ember/object';
 import { later } from '@ember/runloop';
+import { inject as service } from '@ember/service';
+
 import FileProviderModel from 'ember-osf-web/models/file-provider';
 import Node from 'ember-osf-web/models/node';
+import Toast from 'ember-toastr/services/toast';
 
 export default class ExportTarget extends Component {
+    @service toast!: Toast;
     node?: Node;
     destinationProvider = '';
     providers?: FileProviderModel[];
@@ -37,8 +41,13 @@ export default class ExportTarget extends Component {
         if (!this.node) {
             throw new EmberError('Illegal state');
         }
-        const providers = await this.node.get('files');
-        return providers.toArray();
+        try {
+            const providers = await this.node.get('files');
+            return providers.toArray();
+        } catch (e) {
+            this.toast.error(e.toString());
+            return [];
+        }
     }
 
     @action
