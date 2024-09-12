@@ -42,7 +42,7 @@ export default class ExportTarget extends Component {
             throw new EmberError('Illegal state');
         }
         try {
-            const providers = await this.node.get('files');
+            const providers = await this.node.loadAll('files');
             return providers.toArray();
         } catch (e) {
             this.toast.error(e.toString());
