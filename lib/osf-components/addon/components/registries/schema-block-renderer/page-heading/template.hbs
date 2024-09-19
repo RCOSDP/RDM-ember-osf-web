@@ -1,11 +1,13 @@
-<h2
-    local-class='PageHeading'
-    data-test-page-heading
-    id={{@schemaBlock.elementId}}
-    ...attributes
->
-    {{this.localizedDisplayText}}
-</h2>
+{{#unless @schemaBlock.hideProjectmetadata}}
+    <h2
+        local-class='PageHeading'
+        data-test-page-heading
+        id={{@schemaBlock.elementId}}
+        ...attributes
+    >
+        {{this.localizedDisplayText}}
+    </h2>
+{{/unless}}
 {{#if this.isEditableForm}}
     <p local-class='PageHeading_helper'>{{this.localizedHelpText}}</p>
 {{/if}}
