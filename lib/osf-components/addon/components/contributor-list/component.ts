@@ -64,7 +64,7 @@ export default class ContributorList extends Component {
                 'bibliographicContributors',
                 {
                     fields: {
-                        users: 'full_name, given_name, family_name, id, links',
+                        users: 'full_name,given_name,family_name,id,links',
                     },
                     page: { size: 10 },
                 },
