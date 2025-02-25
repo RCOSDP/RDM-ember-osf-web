@@ -12,6 +12,7 @@ var wayf_sp_entityID;
 var wayf_URL;
 var wayf_return_url;
 var wayf_sp_handlerURL;
+var wayf_eduGAIN_DS_url;
 
 var wayf_use_discovery_service;
 var wayf_use_small_logo;
@@ -2056,6 +2057,10 @@ function decodeBase64(input) {
 	if(typeof(wayf_return_url) == "undefined"){
 		alert('The mandatory parameter \'wayf_return_url\' is missing. Please add it as a javascript variable on this page.');
 		config_ok = false;
+	}
+
+	if(typeof(wayf_eduGAIN_DS_url) == "undefined"){
+		wayf_eduGAIN_DS_url = '';
 	}
 
 	if(typeof(wayf_discofeed_url) == "undefined"){
@@ -5575,6 +5580,10 @@ function decodeBase64(input) {
 		writeHTML('</td>');
 		writeHTML('</tr>');
 		writeHTML('</table>');
+
+		if (wayf_eduGAIN_DS_url){
+				writeHTML('<div><a href="' + wayf_eduGAIN_DS_url + '?target=' + encodeURIComponent(wayf_return_url) + '" style="color:#337ab7;">→Select from eduGAIN's IdP(s)</a></div>');
+		}
 	
 		// Close form
 		writeHTML('</form>');
