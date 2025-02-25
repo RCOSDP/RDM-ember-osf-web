@@ -5582,7 +5582,7 @@ function decodeBase64(input) {
 		writeHTML('</table>');
 
 		if (wayf_eduGAIN_DS_url){
-				writeHTML('<div><a href="' + wayf_eduGAIN_DS_url + '?target=' + encodeURIComponent(wayf_return_url) + '" style="color:#337ab7;">→Select from eduGAIN's IdP(s)</a></div>');
+				writeHTML('<div><a href="' + wayf_eduGAIN_DS_url + '?target=' + encodeURIComponent(wayf_return_url) + '" style="color:#337ab7;">→Select from eduGAIN IdP(s)</a></div>');
 		}
 	
 		// Close form
