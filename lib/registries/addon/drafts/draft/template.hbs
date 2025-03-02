@@ -39,7 +39,7 @@
             <layout.leftNav as |leftNav|>
                 {{#each draftManager.pageManagers as |pageManager index|}}
                     {{#let (get pageManager.schemaBlockGroups 0) as |group|}}
-                        {{#unless group.labelBlock.hideProjectmetadata}}
+                        {{#unless group.labelBlock.concealmentPageNavigator}}
                             <PageLink
                                 @link={{component leftNav.link}}
                                 @draftId={{draftManager.draftId}}
