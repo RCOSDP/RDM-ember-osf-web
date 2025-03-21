@@ -1802,7 +1802,10 @@ function submitForm(){
                 setCookie('_saml_idp', encodeBase64(NonFedEntityID) , 100);
 
                 // Redirect user to SP handler
-                if (wayf_use_discovery_service){
+        		if (wayf_eduGAIN_DS_url && NonFedEntityID == wayf_eduGAIN_DS_url){
+                        redirect_url = wayf_eduGAIN_DS_url + '?target=' + encodeURIComponent(wayf_return_url);
+                        window.location = redirect_url;
+        		} else if (wayf_use_discovery_service){
                         redirect_url = wayf_sp_samlDSURL + (wayf_sp_samlDSURL.indexOf('?')>=0?'&':'?')+'entityID='
                         + encodeURIComponent(NonFedEntityID)
                         + '&target=' + encodeURIComponent(wayf_return_url);
@@ -5580,10 +5583,6 @@ function decodeBase64(input) {
 		writeHTML('</td>');
 		writeHTML('</tr>');
 		writeHTML('</table>');
-
-		if (wayf_eduGAIN_DS_url){
-				writeHTML('<div><a href="' + wayf_eduGAIN_DS_url + '?target=' + encodeURIComponent(wayf_return_url) + '" style="color:#337ab7;">→Select from eduGAIN IdP(s)</a></div>');
-		}
 
 		// Close form
 		writeHTML('</form>');
