@@ -142,6 +142,7 @@ Router.map(function() {
         this.mount('analytics-page', { as: 'analytics' });
         this.route('forks');
         this.route('iqbrims');
+        this.route('workflow');
         this.route('binderhub');
         this.route('metadata');
         this.route('registrations');

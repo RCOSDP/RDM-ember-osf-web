@@ -35,6 +35,9 @@
                         {{/node-navbar/link}}
                         {{node-navbar/link node=@node useLinkTo=false destination='files'}}
 
+                        {{#if this.workflowEnabled }}
+                            {{node-navbar/link node=@node useLinkTo=false destination='workflow'}}
+                        {{/if}}                     
                         {{#if this.iqbrimsEnabled }}
                             {{node-navbar/link node=@node useLinkTo=false destination='iqbrims'}}
                         {{/if}}

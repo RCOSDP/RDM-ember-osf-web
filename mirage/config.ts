@@ -22,6 +22,7 @@ import { summaryMetrics } from './views/institution';
 import { iqbrimsStatus } from './views/iqbrims-status';
 import { metadataNodeErad } from './views/metadata-node-erad';
 import { metadataNodeProject } from './views/metadata-node-project';
+// import { workflowConfig } from './views/workflow-config';
 import { createNode } from './views/node';
 import { osfNestedResource, osfResource, osfToManyRelationship } from './views/osf-resource';
 import { getProviderSubjects } from './views/provider-subjects';
@@ -263,6 +264,7 @@ export default function(this: Server) {
     this.del('/project/:pid/binderhub/server_annotation/:aid', serverAnnotation.del);
     this.get('/project/:id/metadata/erad/candidates', metadataNodeErad);
     this.get('/project/:id/metadata/project', metadataNodeProject);
+    // this.get('/project/:id/workflow/config', workflowConfig);
 
     this.urlPrefix = apiUrl;
     this.namespace = apiNamespace;

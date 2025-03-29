@@ -9,6 +9,7 @@ import { OsfLinkRouterStub } from '../../helpers/osf-link-router-stub';
 enum NavCondition {
     HasParent,
     IQBRIMSEnabled,
+    WorkFlowEnabled,
     BinderHubEnabled,
     IsRegistration = 'isRegistration',
     IsPublic = 'public',
@@ -23,6 +24,7 @@ enum NavLink {
     ThisNode,
     Files = 'files',
     IQBRIMS = 'iqbrims',
+    WorkFlow = 'workflow',
     BinderHub = 'binderhub',
     Wiki = 'wiki',
     Analytics = 'analytics',
@@ -51,12 +53,14 @@ export class FakeNode {
         html: 'http://localhost:4200/fak3d',
     };
 
+    [key: string]: any;
+
     constructor(conditions: NavCondition[] = []) {
         for (const condition of conditions) {
             if (condition === NavCondition.HasParent) {
                 this.parentId = faker.random.uuid();
             } else if (condition !== NavCondition.IQBRIMSEnabled
-                && condition !== NavCondition.BinderHubEnabled) {
+                && condition !== NavCondition.BinderHubEnabled && condition !== NavCondition.WorkFlowEnabled) {
                 this[condition] = true;
             }
         }
@@ -278,6 +282,16 @@ module('Integration | Component | node-navbar', () => {
                     NavLink.BinderHub,
                 ],
             },
+            {
+                conditions: [
+                    NavCondition.WorkFlowEnabled,
+                ],
+                links: [
+                    NavLink.ThisNode,
+                    NavLink.Files,
+                    NavLink.WorkFlow,
+                ],
+            },
         ];
 
         testCases.forEach((testCase, i) => {
@@ -290,9 +304,12 @@ module('Integration | Component | node-navbar', () => {
                 this.set('iqbrimsEnabled', iqbrimsEnabled.length > 0);
                 const binderhubEnabled = testCase.conditions.filter(c => c === NavCondition.BinderHubEnabled);
                 this.set('binderhubEnabled', binderhubEnabled.length > 0);
+                const workflowEnabled = testCase.conditions.filter(c => c === NavCondition.WorkFlowEnabled);
+                this.set('workflowEnabled', workflowEnabled.length > 0);
 
                 await render(
                     hbs`{{node-navbar node=this.node iqbrimsEnabled=this.iqbrimsEnabled
+                        workflowEnabled=this.workflowEnabled
                         binderhubEnabled=this.binderhubEnabled renderInPlace=true}}`,
                 );
 

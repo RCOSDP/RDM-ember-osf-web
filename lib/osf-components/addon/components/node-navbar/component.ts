@@ -106,6 +106,22 @@ export default class NodeNavbar extends Component {
         return result;
     }
 
+    @computed('node.addons.[]')
+    get workflowEnabled(): Promise<boolean> | null {
+        if (!this.node) {
+            return null;
+        }
+        const { node } = this;
+        return (async () => {
+            const addons = await node.addons;
+            if (!addons) {
+                return false;
+            }
+            const workflow = addons.filter(addon => addon.id === 'workflow');
+            return workflow.length > 0;
+        })();
+    }
+
     @action
     toggleNav() {
         this.toggleProperty('collapsedNav');

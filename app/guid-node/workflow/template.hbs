@@ -1,0 +1,319 @@
+{{title (t 'workflow.page_title' nodeTitle=this.model.taskInstance.value.unsafeTitle)}}
+
+<div class='container' local-class='WorkFlow'>
+  {{#if this.loading}}
+    {{t 'workflow.loading'}}
+  {{else}}
+    <div local-class='WorkFlow__editor'>
+      <div local-class="tabs">
+        <ul class="nav nav-tabs">
+          <li class="nav-item {{if (eq this.activeTab "tab1") "active" ""}}">
+              {{#if this.workflowsTask.length}}
+                <a class="nav-link" href="#" {{action "setActiveTab" "tab1"}}>{{t 'workflow.tab1'}}</a>
+              {{else}}
+                <a class="nav-link disabled" href="#" tabindex="-1">{{t 'workflow.tab1'}}</a>
+              {{/if}}
+          </li>
+          <li class="nav-item {{if (eq this.activeTab "tab2") "active" ""}}">
+              {{#if this.workflowsProcess.length}}
+                <a class="nav-link" href="#" {{action "setActiveTab" "tab2"}}>{{t 'workflow.tab2'}}</a>
+              {{else}}
+                <a class="nav-link disabled" href="#" tabindex="-1">{{t 'workflow.tab2'}}</a>
+              {{/if}}
+          </li>
+          <li class="nav-item {{if (eq this.activeTab "tab3") "active" ""}}">
+            {{#if this.node.userHasAdminPermission}}
+                <a class="nav-link" href="#" {{action "setActiveTab" "tab3"}}>{{t 'workflow.tab3'}}</a>
+            {{else}}
+              <a class="nav-link disabled" href="#" tabindex="-1">{{t 'workflow.tab3'}}</a>
+            {{/if}}
+          </li>
+        </ul>
+      </div>
+
+      <div local-class="tab-content">
+        <div local-class="tab-pane {{if (eq this.activeTab "tab1") "active" ""}}">
+          <h3>{{t 'workflow.tab1_content'}}</h3>
+          <OsfButton
+            id="UpdateButton2"
+            @type='secondary'
+            style="position: absolute; right: 130px; top: 230px;"
+            @onClick={{action 'updatebuttonTask'}}>
+               {{t 'workflow.update_button2'}}
+          </OsfButton>
+
+            <h4>{{t 'workflow.workflow_task_list'}}</h4>
+            <table class="workflow-task-table">
+              <thead>
+                  <tr>
+                      <th>{{t 'workflow.processid'}}</th>
+                      <th>{{t 'workflow.workflow2_name'}}</th>
+                      <th>{{t 'workflow.status'}}</th>
+                      <th>{{t 'workflow.starting time'}}</th>
+                      <th>{{t 'workflow.completion time'}}</th>
+                      <th>{{t 'workflow.request_targer'}}</th>
+                  </tr>
+              </thead>
+              <tbody>
+                {{#each (sortAndFilterData this.workflowsTask) as |workflowsTask|}}
+                  <tr
+                    class="task-row {{if workflowsTask.endTime 'disabled'}}"
+                    {{on "click" (unless workflowsTask.endTime (fn this.navigateToTasks workflowsTask.id))}}
+                  >
+                    <td>{{workflowsTask.processInstanceId}}</td>
+                    <td>{{workflowsTask.name}}</td>
+                    <td>
+                      {{#if workflowsTask.endTime}}
+                        完了
+                      {{else}}
+                        実行中
+                      {{/if}}
+                    </td>
+                    <td>{{formatDateToJST workflowsTask.startTime}}</td>
+                    <td>{{formatDateToJST workflowsTask.endTime}}</td>
+                    <td>{{workflowsTask.assignee}}</td>
+                  </tr>
+                {{/each}}
+              </tbody>
+            </table>
+          <style>
+              .workflow-task-table {
+                  width: 100%;
+                  border-collapse: collapse;
+                  border: 1px solid black;
+              }
+
+              .workflow-task-table th,
+              .workflow-task-table td {
+                  border-bottom: 1px solid #e9e9ed;
+                  border-right: none;
+                  padding: 8px;
+                  text-align: left;
+              }
+
+              .workflow-task-table th {
+                  background-color: #e9e9ed;
+              }
+
+              .workflow-task-table tr:last-child td {
+                  border-bottom: none;
+              }
+          </style>
+        </div>
+
+        <div local-class="tab-pane {{if (eq this.activeTab "tab2") "active" ""}}">
+            <h3>{{t 'workflow.tab2_content'}}</h3>
+
+            <OsfButton
+              id="UpdateButton"
+              @type='secondary'
+              style="position: absolute; right: 200px;"
+              @onClick={{action 'updatebutton'}}>
+                {{t 'workflow.update_button'}}
+            </OsfButton>
+
+            <h4>{{t 'workflow.available workflow processes'}}</h4>
+            <table class="workflow-processes-table">
+                <thead>
+                    <tr>
+                        <th>{{t 'workflow.workflow2_name'}}</th>
+                        <th>{{t 'workflow.workflow_processid'}}</th>
+                        <th>{{t 'workflow.initiator'}}</th>
+                        <th>{{t 'workflow.starting time'}}</th>
+                        <th>{{t 'workflow.completion time'}}</th>
+                        <th>{{t 'workflow.status of processing'}}</th>
+                        <th>{{t 'workflow.execution state'}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each this.workflowsProcessInfo as |workflowsProcessInfo|}}
+                        <tr class="process-row" {{action 'openProcessDialog' workflowsProcessInfo.id}}>
+                            <td>{{workflowsProcessInfo.processDefinitionName}}</td>
+                            <td>{{workflowsProcessInfo.id}}</td>
+                            <td>{{workflowsProcessInfo.startUserId}}</td>
+                            <td>{{formatDateToJST workflowsProcessInfo.startTime}}</td>
+                            <td>{{formatDateToJST workflowsProcessInfo.endTime}}</td>
+                            <td>
+                              {{#if workflowsProcessInfo.endTime}}
+                                    終了
+                                {{else}}
+                                    開始
+                                {{/if}}
+                            </td>
+                            <td>
+                               {{#if workflowsProcessInfo.endTime}}
+                                    完了
+                                {{else}}
+                                    実行中
+                                {{/if}}
+                            </td>
+                            <td>
+                                {{#if workflowsProcessInfo}}
+                                  <OsfButton
+                                    id="UpdateButton"
+                                    @type='danger'
+                                    style="right: 200px;"
+                                    @onClick={{action 'stopProcess' workflowsProcessInfo.id on='click' preventDefault=true stopPropagation=true}}>
+                                      {{t 'workflow.stop_button'}}
+                                  </OsfButton>
+                                {{/if}}
+                            </td>
+                        </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+
+          {{#if this.isProcessDialogVisible}}
+          <div local-class='modal-overlay'>
+              <div local-class='workflow-dialog'>
+                  <h4>{{t 'workflow.workflowprocessinformation'}}</h4><br>
+                  <label>{{t 'workflow.workflowprocess'}}</label>
+                  {{this.selectedWorkflow.processDefinitionName}}<br>
+                  <label>{{t 'workflow.workflow_processid'}}</label>
+                  {{this.selectedWorkflow.id}}<br>
+                  <label>{{t 'workflow.related files'}}</label><br>
+                  {{this.filePath.filePath}}<br>
+
+                  <label>{{t 'workflow.completed tasks'}}</label><br>
+                  {{#each this.taskDetails as |task|}}
+                      {{#if task.endTime}}
+                          <div>{{task.name}}</div>
+                      {{/if}}
+                  {{/each}}
+
+                  <label>{{t 'workflow.running tasks'}}</label><br>
+                  {{#each this.taskDetails as |task|}}
+                      {{#unless task.endTime}}
+                          <div>{{task.name}}</div>
+                      {{/unless}}
+                  {{/each}}
+
+                  <div style="text-align: right;">
+                      <OsfButton @type='secondary' @onClick={{action 'closeProcessDialog'}}>
+                        {{t 'workflow.cancel_button'}}
+                      </OsfButton>
+                  </div>
+              </div>
+          </div>
+          {{/if}}
+            <style>
+              .workflow-processes-table {
+                  width: 100%;
+                  border-collapse: collapse;
+                  border: 1px solid black;
+              }
+
+              .workflow-processes-table th,
+              .workflow-processes-table td {
+                  border-bottom: 1px solid #e9e9ed;
+                  border-right: none;
+                  padding: 8px;
+                  text-align: left;
+              }
+
+              .workflow-processes-table th {
+                  background-color: #e9e9ed;
+              }
+
+              .workflow-processes-table tr:last-child td {
+                  border-bottom: none;
+              }
+          </style>
+        </div>
+
+        <div local-class="tab-pane {{if (eq this.activeTab "tab3") "active" ""}}">
+          <h3>{{t 'workflow.tab3_content'}}</h3>
+            <OsfButton
+                id="registerWorkflowBtn"
+                style="position: absolute; right: 300px;"
+                @type='success'
+                @onClick={{action 'registerWorkflow'}}
+            >
+                {{t 'workflow.register_button'}}
+            </OsfButton>
+
+          <h4>{{t 'workflow.Available_Workflows'}}</h4>
+          <ul id="workflowList">
+            {{#each this.workflowsManage as |workflowsManage|}}
+              {{#each this.workflowsManageInfo as |match|}}
+                {{#if (eq workflowsManage.id match.id)}}
+                  <li class="workflow-item">
+                    <span>{{match.name}}</span>
+                    {{#if workflowsManage.suspended}}
+                    <OsfButton @type='primary' @onClick={{action 'toggleActivate' workflowsManage.id}}>
+                      {{t 'workflow.activate'}}
+                    </OsfButton>
+                    {{else}}
+                    <OsfButton @type='danger' @onClick={{action 'toggleDeactivate' workflowsManage.id}}>
+                      {{t 'workflow.deactivate'}}
+                    </OsfButton>
+                    {{/if}}
+                     <OsfButton @type='success' @onClick={{action 'editWorkflow' workflowsManage.id}}>
+                      {{t 'workflow.edit'}}
+                    </OsfButton>
+                     <OsfButton @type='secondary' @onClick={{action 'removeworkflow' workflowsManage.id}}>
+                      {{t 'workflow.remove'}}
+                    </OsfButton>
+                  </li>
+                  {{break}}
+                {{/if}}
+              {{/each}}
+            {{/each}}
+          </ul>
+
+          {{#if this.isRegistering}}
+            <div local-class='modal-overlay'>
+              <div local-class='workflow-dialog'>
+                <h4>{{if this.isEditing (t 'workflow.workflow_edit') (t 'workflow.workflow_registration')}}</h4>
+                <form>
+                  <label for="workflowEngine">{{t 'workflow.workflow_engine'}}</label><br>
+                  <select id="workflowEngine" disabled={{if this.isEditing true}} {{on 'change' this.updateWorkflowEngine}}>
+                   <option value=""></option>
+                    {{#each this.workflowEngines as |engine|}}
+                      <option value="{{engine}}" selected={{eq this.selectedWorkflowEngine engine}}>{{engine}}</option>
+                    {{/each}}
+                  </select><br>
+
+                  <label for="workflowName">{{t 'workflow.workflow_name'}}</label><br>
+                  <input type="text" value={{this.workflowName}} id="workflowName" {{on 'input' this.updateWorkflowName}}><br>
+
+                  <label for="workflowID">{{t 'workflow.workflow_id'}}</label><br>
+                  <select id="workflowID" disabled={{if this.isEditing true}} {{on 'change' this.updateWorkflowID}}>
+                    <option value=""></option>
+                    {{#each this.workflowsManage as |workflowsManage|}}
+                      <option value="{{workflowsManage.id}}" selected={{eq this.workflowID workflowsManage.id}}>{{workflowsManage.id}}</option>
+                    {{/each}}
+                  </select><br>
+
+                  <label>{{t 'workflow.creatorToken'}}</label><br>
+                  <input type="radio" name="creatorToken" value="readwrite" {{on 'change' (fn this.updateToken 'creatorToken')}} checked={{eq this.creatorToken "readwrite"}}> ReadWriteで使用する
+                  <input type="radio" name="creatorToken" value="read" {{on 'change' (fn this.updateToken 'creatorToken')}} checked={{eq this.creatorToken "read"}}> Readで使用する
+                  <input type="radio" name="creatorToken" value="none" {{on 'change' (fn this.updateToken 'creatorToken')}} checked={{eq this.creatorToken "none"}}> 使用しない<br>
+
+                  <label>{{t 'workflow.adminToken'}}</label><br>
+                  <input type="radio" name="adminToken" value="readwrite" {{on 'change' (fn this.updateToken 'adminToken')}} checked={{eq this.adminToken "readwrite"}}> ReadWriteで使用する
+                  <input type="radio" name="adminToken" value="read" {{on 'change' (fn this.updateToken 'adminToken')}} checked={{eq this.adminToken "read"}}> Readで使用する
+                  <input type="radio" name="adminToken" value="none" {{on 'change' (fn this.updateToken 'adminToken')}} checked={{eq this.adminToken "none"}}> 使用しない<br>
+
+                  <label>{{t 'workflow.executorToken'}}</label><br>
+                  <input type="radio" name="executorToken" value="readwrite" {{on 'change' (fn this.updateToken 'executorToken')}} checked={{eq this.executorToken "readwrite"}}> ReadWriteで使用する
+                  <input type="radio" name="executorToken" value="read" {{on 'change' (fn this.updateToken 'executorToken')}} checked={{eq this.executorToken "read"}}> Readで使用する
+                  <input type="radio" name="executorToken" value="none" {{on 'change' (fn this.updateToken 'executorToken')}} checked={{eq this.executorToken "none"}}> 使用しない<br>
+
+                  <div style="text-align: right;">
+                    <OsfButton @type='secondary' @onClick={{action 'closeRegisterDialog'}}>
+                      {{t 'workflow.cancel_button'}}
+                    </OsfButton>
+                    <OsfButton @type='success' @onClick={{action (if this.isEditing 'updateWorkflow' 'processRegisterWorkflow')}}>
+                     {{if this.isEditing (t 'workflow.update_button') (t 'workflow.register_button2')}}
+                    </OsfButton>
+                  </div>
+                </form>
+              </div>
+            </div>
+          {{/if}}
+        </div>
+      </div>
+    </div>
+  {{/if}}
+</div>
