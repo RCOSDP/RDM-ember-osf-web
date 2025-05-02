@@ -1,7 +1,7 @@
 import { tagName } from '@ember-decorators/component';
 import Component from '@ember/component';
 import { assert } from '@ember/debug';
-import { action } from '@ember/object';
+import { action, computed } from '@ember/object';
 import { alias } from '@ember/object/computed';
 import { run } from '@ember/runloop';
 import { inject as service } from '@ember/service';
@@ -108,5 +108,13 @@ export default class Register extends Component.extend({
                 this.showPartialRegDialog();
             });
         }
+    }
+
+    @computed('draftManager.{registrationResponsesIsValid,node.userHasAdminPermission}')
+    get shouldDisableSubmitButton() {
+        if (!this.draftManager.node.userHasAdminPermission) {
+            return true;
+        }
+        return !this.draftManager.registrationResponsesIsValid;
     }
 }
