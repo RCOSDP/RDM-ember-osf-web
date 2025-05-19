@@ -2,6 +2,9 @@
     model=this.model
     changeset=this.changeset
     title=this.title
+    datetimeInitiated=this.datetimeInitiated
+    datetimeUpdated=this.datetimeUpdated
+    nodeId=this.nodeId
     errors=this.errors
     label=this.label
     valuePath=this.valuePath
@@ -17,25 +20,25 @@
         @class='form-control'
         @name={{@valuePath}}
         @keyUp={{@onKeyUp}}
-        @change={{@onChange}}
-        @disabled={{this.disabled}}
+        @change={{action this.onChange}}
+        @disabled={{this.getEdit}}
     />
 
-    {{#if @autoTitle}}
+    {{#if (or (eq @retrievalTitle 'button_retrieval') (eq @retrievalTitle 'dual_retrieval'))}}
         <OsfButton
             @type='success'
             @onClick={{action this.getTitle}}
         >
-            {{t 'registries.drafts.draft.form.auto_button_label'}}
+            {{t 'registries.drafts.draft.form.get_retrieval_label'}}
         </OsfButton>
     {{/if}}
 
-    {{#if @autoDate}}
+    {{#if  (or (eq @retrievalDate 'button_retrieval') (eq @retrievalDate 'dual_retrieval'))}}
         <OsfButton
             @type='success'
             @onClick={{action this.getDate}}
         >
-            {{t 'registries.drafts.draft.form.auto_button_label'}}
+            {{t 'registries.drafts.draft.form.get_retrieval_label'}}
         </OsfButton>
     {{/if}}
 {{/validated-input/x-input-wrapper}}

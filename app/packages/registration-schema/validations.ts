@@ -161,6 +161,47 @@ export function setupEventForSyncValidation(changeset: ChangesetDef, groups: Sch
     });
 }
 
+export function setupEventForSyncValidation2(changeset: ChangesetDef, groups: SchemaBlockGroup[]) {
+    const requiredAllCheckGroups = groups
+        // ignore GRDM file specific fields
+        .filter((group: SchemaBlockGroup) => !group.registrationResponseKey
+            || !group.registrationResponseKey.match(/^__responseKey_grdm-file:.+$/))
+        .filter((group: SchemaBlockGroup) => group.inputBlock && group.inputBlock.requiredAllCheck);
+
+    let isProcesing = false;
+
+    changeset.on('afterValidation', () => {
+        if (isProcesing) {
+            return;
+        }
+        isProcesing = true;
+
+        try {
+            const checkboxList = requiredAllCheckGroups.map(group => {
+                const registrationResponseKey: string = group.registrationResponseKey || '';
+                const value = changeset.get(registrationResponseKey);
+                return Array.isArray(value) && value.length === 1;
+            });
+
+            requiredAllCheckGroups
+                .forEach(group => {
+                    if (!checkboxList.includes(false)) {
+                        const todayDate = `${new Date().getFullYear()}/${
+                            String(new Date().getMonth() + 1).padStart(2, '0')
+                        }/${
+                            String(new Date().getDate()).padStart(2, '0')
+                        }`;
+                        changeset.set(`__responseKey_${group.inputBlock!.requiredAllCheck}`, todayDate);
+                    } else {
+                        changeset.set(`__responseKey_${group.inputBlock!.requiredAllCheck}`, '');
+                    }
+                });
+        } finally {
+            isProcesing = false;
+        }
+    });
+}
+
 export function validateNodeLicense() {
     return async (_: unknown, __: unknown, ___: unknown, changes: DraftRegistration, content: DraftRegistration) => {
         let validateLicenseTarget = await content.license;

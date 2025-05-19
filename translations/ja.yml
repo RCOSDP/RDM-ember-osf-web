@@ -546,6 +546,7 @@ node_navbar:
     toggle: ナビゲーションを切り替える
     project_nav: プロジェクトナビゲーション
     iqbrims: IQB-RIMS
+    workflow: ワークフロー
     wiki: Wiki
     analytics: 統計
     registrations: 登録
@@ -641,7 +642,7 @@ node:
     metadata:
         new_report_modal:
             title: メタデータ様式を選択
-            info: 'デフォルトは「公的資金による研究データのメタデータ登録」です。<ul><li>「ムーンショット目標２未病データベース-メタデータ」は該当する人のみ選択してください</li></ul>新規に作成したいプロジェクトメタデータの様式を以下から選択してください。<ul><li>メタデータ作成では、様式で定義された各項目を入力することができます。</li><li>メタデータ作成では、このプロジェクトに含まれるファイルのメタデータを登録することができます。</li><li>メタデータ作成から報告書様式に準拠したファイルをダウンロードし、報告書等の提出に利用することができます。</li></ul>'
+            info: 'デフォルトは「公的資金による研究データのメタデータ登録」です。<br>査読付き論文著者最終稿の登録も可能です。<ul><li>「ムーンショット目標２未病データベース-メタデータ」は該当する人のみ選択してください</li></ul>新規に作成したいプロジェクトメタデータの様式を以下から選択してください。<ul><li>メタデータ作成では、様式で定義された各項目を入力することができます。</li><li>メタデータ作成では、このプロジェクトに含まれるファイルのメタデータを登録することができます。</li><li>メタデータ作成から報告書様式に準拠したファイルをダウンロードし、報告書等の提出に利用することができます。</li></ul>'
             note: ＊今後、対応する事業や機関の増加に合わせて、メタデータの様式は随時追加されていきます。
             create: メタデータを作成
         page_title: '{nodeTitle} メタデータ'
@@ -1025,7 +1026,15 @@ registries:
                 last_saved: '自動保存済み: '
                 save_failed: '保存に失敗しました。保存できていない変更があります。'
                 failed_auto_save: '下書きの自動保存に失敗しました。'
-                auto_button_label: '再取得'
+                get_retrieval_label: '自動取得'
+                copy_to_clipboard: 'クリップボードにコピー'
+                from_clipboard_paste: 'クリップボードから貼り付け'
+                clipboard_copied: 'クリップボードコピーされました！'
+                warning_noautosave: '自動保存されていません。少し時間をたってから、もう一度お試しください！'
+                clipboard_pasted: 'クリップボード貼り付けされました！'
+                clipboard_fail: 'クリップボードからの保存に失敗しました: '
+                json_invalid: 'クリップボードには有効な JSON が含まれていません: '
+                clipboard_unread: 'クリップボードからの読み取りに失敗しました: '
             review:
                 title: 送信前に登録を確認する
                 page_label: 内容確認
@@ -1928,3 +1937,53 @@ metadata:
     array-input:
         add-item: 'アイテム追加'
         remove-item: 'アイテム削除'
+
+workflow:
+  page_title: '{nodeTitle} ワークフロー'
+  header: 'ワークフロー'
+  loading: 'ロード中...'
+  tab1: 'タスク'
+  tab2: 'プロセス'
+  tab3: 'ワークフロー管理'
+  tab1_content: 'タスク一覧'
+  tab2_content: 'プロセス一覧'
+  tab3_content: 'ワークフロー管理'
+  start_button: 'ワークフローの開始'
+  Available_Workflows: '利用可能なワークフロー一覧'
+  register_button: 'ワークフローの登録'
+  activate: '有効'
+  deactivate: '無効'
+  edit: '情報の編集'
+  remove: '登録解除'
+  workflow_registration: 'ワークフローの登録'
+  workflow_edit: 'ワークフロー情報の編集'
+  workflow_engine: 'ワークフローエンジン'
+  workflow_name: 'ワークフロー名'
+  workflow_id: 'ワークフローID'
+  creatorToken: 'ワークフロー作成者のトークンの払い出しに関する設定'
+  adminToken: 'プロジェクト管理者のトークンの払い出しに関する設定'
+  executorToken: 'ワークフロー実行者のトークンの払い出しに関する設定'
+  cancel_button: 'キャンセル'
+  register_button2: '登録'
+  update_button: '更新'
+  available workflow processes: 'ワークフロープロセスの一覧'
+  workflow2_name: '名前'
+  workflow_processid: 'ワークフロープロセスID'
+  initiator: '開始者'
+  starting time: '開始時刻'
+  completion time: '完了時刻'
+  status of processing: '処理状況'
+  execution state: '実行状況'
+  operation: '操作'
+  workflowprocessinformation: 'ワークフロープロセスの情報'
+  related files: '関連ファイル'
+  completed tasks: '完了済タスク'
+  update_button2: '再読み込み'
+  workflow_task_list: 'ワークフロータスクの一覧'
+  request_targer: '依頼対象'
+  status: '状態'
+  processid: 'プロセスID'
+  stop_button: 'プロセス削除'
+  workflowprocess: 'ワークフロープロセス'
+  delprocess: 'プロセス削除'
+  running tasks: '実行中タスク'

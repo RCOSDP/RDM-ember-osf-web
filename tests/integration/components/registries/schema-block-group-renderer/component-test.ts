@@ -172,6 +172,8 @@ module('Integration | Component | schema-block-group-renderer', hooks => {
             'page-one_single-select-two': '',
             'page-one_multi-select': [],
             'page-one_file-input': [testFile],
+            datetimeInitiated: new Date(),
+            datetimeUpdated: new Date(),
         };
         const registrationResponseChangeset = new Changeset(registrationResponse);
         const node = await this.store.findRecord('node', mirageNode.id, {
