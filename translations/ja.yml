@@ -350,6 +350,7 @@ footer:
     terms: 利用規約
     privacy: プライバシーポリシー
     separator: ' | '
+    logo_image: '/assets/images/global/footer_logo_JP.png'
 home:
     title: ホーム
     youtube_modal_title: 'GakuNin RDMを始める'

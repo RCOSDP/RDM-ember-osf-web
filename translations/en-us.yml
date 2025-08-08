@@ -350,6 +350,7 @@ footer:
     terms: 'Terms&nbsp;of&nbsp;Use'
     privacy: 'Privacy&nbsp;Policy'
     separator: ' | '
+    logo_image: '/assets/images/global/footer_logo_EN.png'
 home:
     title: Home
     youtube_modal_title: 'Getting Started with GakuNin RDM'
