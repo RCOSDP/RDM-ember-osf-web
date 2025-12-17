@@ -10,7 +10,7 @@
                 @route='registries.drafts.draft'
                 @models={{array this.draftRegistration.id}}
             >
-                {{this.draftRegistration.title}}
+                {{this.displayTitle}}
             </OsfLink>
         {{else}}
             <ContentPlaceholders as |placeholder|>
@@ -24,6 +24,11 @@
     <section local-class='DraftRegistrationCard__body' data-test-draft-registration-card-body>
         {{#if this.draftRegistration}}
             <small>
+                {{#if this.wekoItemId}}
+                    <p data-test-weko-item-id>
+                        <strong>{{t 'osf-components.draft-registration-card.weko_id' weko_id=this.wekoItemId}}</strong>
+                    </p>
+                {{/if}}
                 <p data-test-initiated-by>
                     {{t 'osf-components.draft-registration-card.initiated_by'}}
                     {{this.draftRegistration.initiator.fullName}}
@@ -89,7 +94,7 @@
                         </modal.footer>
                     </BsModal>
                 </div>
-                <div class='col-md-2'>
+                <div class='col-md-3' local-class='DraftRegistrationCard__export'>
                     <RegistrationReportExportButton
                         @metadataType='draft_registration'
                         @metadataId={{this.draftRegistration.id}}

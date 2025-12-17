@@ -36,9 +36,13 @@ export default class RegistrationReportExportButton extends Component {
 
     @service toast!: Toast;
 
+    buttonClass?: string;
+
     exportCsvUrl?: string;
 
     metadataSchema?: MetadataNodeSchemaModel;
+
+    metadataSchemaLoading: boolean = false;
 
     registrationSchemaId?: string | null = null;
 
@@ -80,9 +84,14 @@ export default class RegistrationReportExportButton extends Component {
         return this.metadataFormats.length === 0;
     }
 
-    @computed('metadataFormats')
+    @computed('metadataDestinations')
     get hasNoDestinations(): boolean {
         return this.metadataDestinations.length === 0;
+    }
+
+    @computed('metadataSchemaLoading', 'hasNoFormats', 'hasNoDestinations')
+    get isDisabled(): boolean {
+        return this.metadataSchemaLoading || (this.hasNoFormats && this.hasNoDestinations);
     }
 
     @action
@@ -121,7 +130,14 @@ export default class RegistrationReportExportButton extends Component {
         this.upload(targetDestination.url, this.metadataId)
             .catch(error => {
                 this.set('dialogOpen', false);
-                this.toast.error(`Upload failed: ${error.toString()}`);
+                const msg = (error && error.responseJSON && error.responseJSON.message_long)
+                    || (
+                        (typeof error === 'object' && error !== null && typeof error.toString === 'function')
+                            ? error.toString()
+                            : ''
+                    )
+                    || '';
+                this.toast.error(`Upload failed: ${msg}`);
             });
     }
 
