@@ -52,7 +52,7 @@ export default class GroupList extends Component {
                 });
             };
 
-            const result = yield this.store.query('node-mapcore-group', { nodeId: this.node.id, page: 1 });
+            const result = yield this.store.query('node-mapcore-group', { nodeId: this.node.id, page: 1, visible: true });
             const groups = itemsFromResult(result) as NodeMapcoreGroup[];
             const meta = (result as any).meta || {};
             this.setProperties({
