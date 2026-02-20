@@ -26,8 +26,6 @@ export default class SingleSelectPulldownInput extends Component {
     onInput!: () => void;
     onMetadataInput!: () => void;
 
-    // anotherOption?: string;
-
     didReceiveAttrs() {
         assert(
             'SchemaBlockRenderer::Editable::SingleSelectPulldownInput requires optionBlocks to render',
