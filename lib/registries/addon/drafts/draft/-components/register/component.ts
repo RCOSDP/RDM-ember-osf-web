@@ -14,6 +14,7 @@ import MetadataNodeSchemaModel from 'ember-osf-web/models/metadata-node-schema';
 import NodeModel from 'ember-osf-web/models/node';
 import Registration from 'ember-osf-web/models/registration';
 import pathJoin from 'ember-osf-web/utils/path-join';
+import { getWekoItemId, getWekoLabelKey } from 'ember-osf-web/utils/weko-item';
 import DraftRegistrationManager from 'registries/drafts/draft/draft-registration-manager';
 
 const { OSF: { url: baseURL } } = config;
@@ -84,23 +85,12 @@ export default class Register extends Component.extend({
 
     @computed('draftRegistration.registrationResponses')
     get wekoItemId(): string | null {
-        const { draftRegistration } = this;
-        if (!draftRegistration) {
-            return null;
-        }
-        const { registrationResponses: responses } = draftRegistration;
-        if (!responses || typeof responses !== 'object') {
-            return null;
-        }
-        const wekoIdKey = 'internal:weko-item-id';
-        const prefixedWekoIdKey = `__responseKey_${wekoIdKey}`;
-        const wekoIdValue = responses[wekoIdKey] || responses[prefixedWekoIdKey];
+        return getWekoItemId(this.draftRegistration?.registrationResponses);
+    }
 
-        if (wekoIdValue && typeof wekoIdValue === 'string' && wekoIdValue.trim()) {
-            return wekoIdValue.trim();
-        }
-
-        return null;
+    @computed('draftRegistration.registrationSchema.name')
+    get wekoLabelKey(): string {
+        return getWekoLabelKey(this.draftRegistration.registrationSchema.get('name'));
     }
 
     @computed('showMobileView')

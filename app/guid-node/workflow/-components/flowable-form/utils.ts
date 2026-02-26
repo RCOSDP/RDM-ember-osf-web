@@ -45,3 +45,17 @@ export function extractProjectMetadata(field: WorkflowTaskField): ProjectMetadat
 export function extractFileMetadata(field: WorkflowTaskField): FileMetadataPlaceholder | null {
     return extractMetadataPlaceholder(field, '_FILE_METADATA');
 }
+
+export function extractFileSelector(field: WorkflowTaskField): boolean {
+    if (field.type !== 'multi-line-text') {
+        return false;
+    }
+    return field.placeholder === '_FILE_SELECTOR()';
+}
+
+export function extractExportTarget(field: WorkflowTaskField): boolean {
+    if (field.type !== 'multi-line-text') {
+        return false;
+    }
+    return field.placeholder === '_EXPORT_TARGET()';
+}

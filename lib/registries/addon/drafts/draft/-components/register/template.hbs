@@ -13,7 +13,7 @@
     />
     {{#if this.wekoItemId}}
         <p data-test-weko-item-id local-class='WekoIdLabel'>
-            {{t 'registries.drafts.draft.weko_id' weko_id=this.wekoItemId htmlSafe=true}}
+            {{t (concat 'registries.drafts.draft.weko_id.' this.wekoLabelKey) weko_id=this.wekoItemId htmlSafe=true}}
         </p>
     {{/if}}
     <a

@@ -129,6 +129,20 @@
                 @onChange={{this.handleFileMetadataSelection}}
                 @disabled={{this.isReadOnly}}
             />
+        {{else if this.isFileSelector}}
+            <GuidNode::Workflow::-Components::FlowableForm::FileSelector
+                @node={{@node}}
+                @value={{this.currentValue}}
+                @onChange={{this.handleFileSelectorChange}}
+                @disabled={{this.isReadOnly}}
+            />
+        {{else if this.isExportTarget}}
+            <GuidNode::Workflow::-Components::FlowableForm::ExportTarget
+                @node={{@node}}
+                @value={{this.currentValue}}
+                @onChange={{this.handleExportTargetChange}}
+                @disabled={{this.isReadOnly}}
+            />
         {{else if this.isTextarea}}
             <textarea
                 id={{this.fieldId}}

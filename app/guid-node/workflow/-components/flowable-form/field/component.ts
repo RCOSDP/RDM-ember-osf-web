@@ -6,7 +6,7 @@ import { WorkflowVariable } from '../../../types';
 import { parseProgressSteps, ProgressStep } from '../../progress-sidebar/utils';
 import { resolveFlowableType } from '../component';
 import { FieldValueWithType, WorkflowTaskField, WorkflowTaskFieldOption } from '../types';
-import { extractFileMetadata, extractProjectMetadata } from '../utils';
+import { extractExportTarget, extractFileMetadata, extractFileSelector, extractProjectMetadata } from '../utils';
 
 function getOptionValue(option: WorkflowTaskFieldOption): string | undefined {
     return (option.id !== undefined && option.id !== null) ? option.id : option.name;
@@ -118,6 +118,18 @@ export default class TaskFormField extends Component<TaskFormFieldArgs> {
         this.args.onChange(this.args.field.id, valueWithType);
     }
 
+    @action
+    handleFileSelectorChange(valueWithType: FieldValueWithType): void {
+        this.updatedValue = valueWithType;
+        this.args.onChange(this.args.field.id, valueWithType);
+    }
+
+    @action
+    handleExportTargetChange(valueWithType: FieldValueWithType): void {
+        this.updatedValue = valueWithType;
+        this.args.onChange(this.args.field.id, valueWithType);
+    }
+
     get displayValue(): unknown {
         return this.updatedValue !== null ? this.updatedValue.value : this.currentValue;
     }
@@ -201,7 +213,18 @@ export default class TaskFormField extends Component<TaskFormFieldArgs> {
         if (this.isProjectMetadataSelector) {
             return false;
         }
+        if (this.isFileSelector || this.isExportTarget) {
+            return false;
+        }
         return this.type === 'multi-line-text' || this.type === 'textarea';
+    }
+
+    get isFileSelector(): boolean {
+        return extractFileSelector(this.args.field);
+    }
+
+    get isExportTarget(): boolean {
+        return extractExportTarget(this.args.field);
     }
 
     get projectMetadataPlaceholder() {
