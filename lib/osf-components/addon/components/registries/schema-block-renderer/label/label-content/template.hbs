@@ -1,7 +1,7 @@
 {{assert 'Registries::SchemaBlockRenderer::Label::LabelContent requires a @schemaBlock' @schemaBlock}}
 <p
     ...attributes
-    local-class='DisplayText'>
+    local-class='DisplayText {{if @displayTextOverride "SubLabel"}}'>
     {{~this.localizedDisplayText~}}
     {{~#if (and @isRequired (not @readonly))~}}
         <span local-class='Required'>*</span>

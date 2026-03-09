@@ -3,6 +3,10 @@
     display: inline-block;
 }
 
+.SubLabel {
+    font-weight: normal;
+}
+
 .Required {
     color: $brand-danger;
     margin-left: 0.25em;

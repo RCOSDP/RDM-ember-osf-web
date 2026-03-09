@@ -55,4 +55,10 @@ export interface SchemaBlock {
     retrievalVersion?: string;
     readonly?: boolean;
     rowAdditionCaption?: string;
+    suggestion?: string;
+    ui?: {
+        group?: string | { id: string; title?: string; bar?: boolean; tags?: string[]; help?: string; info?: string; parent?: string | { id: string; title?: string } };
+        sub_label?: string;
+        item?: { placeholder?: string; width?: string; widget?: string; enabled_if?: object; info?: string; tags?: string[]; freetext?: boolean };
+    };
 }

@@ -2,7 +2,7 @@ import { tagName } from '@ember-decorators/component';
 import Component from '@ember/component';
 
 import { assert } from '@ember/debug';
-import { action } from '@ember/object';
+import { action, computed } from '@ember/object';
 import { alias } from '@ember/object/computed';
 import { inject as service } from '@ember/service';
 
@@ -13,6 +13,7 @@ import Intl from 'ember-intl/services/intl';
 import { layout } from 'ember-osf-web/decorators/component';
 import NodeModel from 'ember-osf-web/models/node';
 import { buildValidation, SchemaBlock, SchemaBlockGroup } from 'ember-osf-web/packages/registration-schema';
+import { buildVisualItems, VisualItem } from 'ember-osf-web/packages/registration-schema/ui-group';
 import DraftRegistrationManager from 'registries/drafts/draft/draft-registration-manager';
 
 import styles from './styles';
@@ -107,6 +108,15 @@ export default class ArrayInput extends Component {
         const newSubChangesets = this.get('subChangesets').filter(c => c !== subChangeset);
         this.set('subChangesets', newSubChangesets);
         this.save(newSubChangesets);
+    }
+
+    @computed('schemaBlockGroup.children')
+    get visualItems(): VisualItem[] {
+        const children = this.schemaBlockGroup.children;
+        if (!children) {
+            return [];
+        }
+        return buildVisualItems(children, text => this.getLocalizedText(text));
     }
 
     getLocalizedText(text: string) {

@@ -1,0 +1,18 @@
+{{#each @items as |item|}}
+    {{#if item.uiGroup}}
+        <div local-class='UiGroup'>
+            {{#if item.uiGroup.localizedTitle}}
+                <p local-class='UiGroupHeading'>{{item.uiGroup.localizedTitle}}</p>
+            {{/if}}
+            <Registries::UiVisualItems
+                @items={{item.children}}
+                @baseStrategy={{@baseStrategy}}
+            />
+        </div>
+    {{else}}
+        <Registries::SchemaBlockGroupRenderer
+            @schemaBlockGroup={{item.schemaBlockGroup}}
+            @renderStrategy={{component @baseStrategy schemaBlockGroup=item.schemaBlockGroup}}
+        />
+    {{/if}}
+{{/each}}

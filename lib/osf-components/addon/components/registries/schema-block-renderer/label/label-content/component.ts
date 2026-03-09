@@ -16,6 +16,9 @@ export default class LabelContent extends Component {
     // Required params
     schemaBlock!: SchemaBlock;
 
+    // Optional params
+    displayTextOverride?: string;
+
     // Private property
     shouldShowExample = false;
 
@@ -24,9 +27,9 @@ export default class LabelContent extends Component {
         this.toggleProperty('shouldShowExample');
     }
 
-    @computed('schemaBlock')
+    @computed('schemaBlock', 'displayTextOverride')
     get localizedDisplayText() {
-        const text = this.schemaBlock.displayText;
+        const text = this.displayTextOverride || this.schemaBlock.displayText;
         if (!text) {
             return text;
         }
