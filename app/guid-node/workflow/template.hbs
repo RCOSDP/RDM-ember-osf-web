@@ -47,6 +47,31 @@
         </li>
     </ul>
 
+    {{#if (and this.pendingTemplates.length this.canStartWorkflow)}}
+        <div class="alert alert-info" data-test-workflow-pending-banner>
+            <strong>{{t 'workflow.console.pendingTemplates.heading'}}</strong>
+            {{#each this.pendingTemplates as |entry|}}
+                <div style="margin-top: 6px;">
+                    <span>{{entry.displayLabel}}</span>
+                    <button
+                        type="button"
+                        class="btn btn-xs btn-primary"
+                        {{on "click" (fn this.acceptPending entry)}}
+                    >
+                        {{t 'workflow.console.pendingTemplates.activate'}}
+                    </button>
+                    <button
+                        type="button"
+                        class="btn btn-xs btn-default"
+                        {{on "click" (fn this.dismissPending entry)}}
+                    >
+                        {{t 'workflow.console.pendingTemplates.dismiss'}}
+                    </button>
+                </div>
+            {{/each}}
+        </div>
+    {{/if}}
+
     {{#if (eq this.activeTab 'start')}}
         <div class="panel panel-default" data-test-workflow-start-panel>
             <div class="panel-heading clearfix">
@@ -169,28 +194,40 @@
 
     {{#if (eq this.activeTab 'runs')}}
         <div class="panel panel-default" data-test-workflow-runs-panel>
-            <div class="panel-heading clearfix">
+            <div class="panel-heading" style="display: flex; align-items: center; gap: 8px;">
                 <strong>{{t 'workflow.console.runs.heading'}}</strong>
-                <div class="pull-right m-r-sm">
-                    <label class="checkbox-inline m-b-0">
-                        <input
-                            type="checkbox"
-                            checked={{this.hideCompletedRuns}}
-                            {{on "change" this.toggleHideCompletedRuns}}
-                            data-test-workflow-hide-completed-runs
-                        >
-                        {{t 'workflow.console.runs.hideCompleted'}}
-                    </label>
-                </div>
+                <span style="flex: 1;"></span>
                 <button
                     type="button"
-                    class="btn btn-default btn-xs pull-right"
-                    {{on "click" this.refreshRuns}}
+                    class="btn btn-default btn-xs"
+                    {{on "click" this.refreshAll}}
                     disabled={{this.isRefreshingRuns}}
                 >
                     <i class="fa fa-refresh {{if this.isRefreshingRuns 'fa-spin'}}"></i>
                     {{t 'workflow.console.refresh'}}
                 </button>
+                <label style="font-weight: normal; font-size: 12px; margin: 0;">
+                    {{t 'workflow.console.displayCount'}}
+                    <select
+                        style="height: 22px; padding: 0 2px; font-size: 12px;"
+                        {{on "change" this.changeRunsLimit}}
+                        data-test-workflow-runs-limit
+                    >
+                        {{#each this.runsLimitOptions as |opt|}}
+                            <option value={{opt}} selected={{eq opt this.runsLimit}}>{{opt}}</option>
+                        {{/each}}
+                    </select>
+                </label>
+                <label style="font-weight: normal; font-size: 12px; margin: 0; display: flex; align-items: center; gap: 4px;">
+                    <input
+                        type="checkbox"
+                        style="margin: 0;"
+                        checked={{this.hideCompletedRuns}}
+                        {{on "change" this.toggleHideCompletedRuns}}
+                        data-test-workflow-hide-completed-runs
+                    >
+                    {{t 'workflow.console.runs.hideCompleted'}}
+                </label>
             </div>
             <div class="panel-body">
                 {{#if this.runsError}}
@@ -287,28 +324,40 @@
 
     {{#if (eq this.activeTab 'tasks')}}
         <div class="panel panel-default" data-test-workflow-tasks-panel>
-            <div class="panel-heading clearfix">
+            <div class="panel-heading" style="display: flex; align-items: center; gap: 8px;">
                 <strong>{{t 'workflow.console.tasks.heading'}}</strong>
-                <div class="pull-right m-r-sm">
-                    <label class="checkbox-inline m-b-0">
-                        <input
-                            type="checkbox"
-                            checked={{this.hideCompletedTasks}}
-                            {{on "change" this.toggleHideCompletedTasks}}
-                            data-test-workflow-hide-completed-tasks
-                        >
-                        {{t 'workflow.console.tasks.hideCompleted'}}
-                    </label>
-                </div>
+                <span style="flex: 1;"></span>
                 <button
                     type="button"
-                    class="btn btn-default btn-xs pull-right"
-                    {{on "click" this.refreshTasks}}
+                    class="btn btn-default btn-xs"
+                    {{on "click" this.refreshAll}}
                     disabled={{this.isRefreshingTasks}}
                 >
                     <i class="fa fa-refresh {{if this.isRefreshingTasks 'fa-spin'}}"></i>
                     {{t 'workflow.console.refresh'}}
                 </button>
+                <label style="font-weight: normal; font-size: 12px; margin: 0;">
+                    {{t 'workflow.console.displayCount'}}
+                    <select
+                        style="height: 22px; padding: 0 2px; font-size: 12px;"
+                        {{on "change" this.changeTasksLimit}}
+                        data-test-workflow-tasks-limit
+                    >
+                        {{#each this.tasksLimitOptions as |opt|}}
+                            <option value={{opt}} selected={{eq opt this.tasksLimit}}>{{opt}}</option>
+                        {{/each}}
+                    </select>
+                </label>
+                <label style="font-weight: normal; font-size: 12px; margin: 0; display: flex; align-items: center; gap: 4px;">
+                    <input
+                        type="checkbox"
+                        style="margin: 0;"
+                        checked={{this.hideCompletedTasks}}
+                        {{on "change" this.toggleHideCompletedTasks}}
+                        data-test-workflow-hide-completed-tasks
+                    >
+                    {{t 'workflow.console.tasks.hideCompleted'}}
+                </label>
             </div>
             <div class="panel-body">
                 {{#if this.tasksError}}

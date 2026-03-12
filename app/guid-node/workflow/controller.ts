@@ -6,10 +6,12 @@ import config from 'ember-get-config';
 
 import Intl from 'ember-intl/services/intl';
 import Node from 'ember-osf-web/models/node';
+import { Permission } from 'ember-osf-web/models/osf-model';
 import CurrentUser from 'ember-osf-web/services/current-user';
 import pathJoin from 'ember-osf-web/utils/path-join';
 
 import {
+    PendingTemplate,
     TaskDialogSubmission,
     WorkflowActivationApiResponse,
     WorkflowRouteModel,
@@ -116,6 +118,7 @@ export default class GuidNodeWorkflowController extends Controller {
     @service intl!: Intl;
 
     @tracked templates: WorkflowTemplate[] = [];
+    @tracked pendingTemplates: PendingTemplate[] = [];
     @tracked templatesError: string | null = null;
     @tracked isRefreshing = false;
 
@@ -133,6 +136,8 @@ export default class GuidNodeWorkflowController extends Controller {
     @tracked isRefreshingRuns = false;
     @tracked runsLoaded = false;
     @tracked hideCompletedRuns = true;
+    @tracked runsLimit = 25;
+    runsLimitOptions = [25, 50, 100];
 
     @tracked isCancelDialogOpen = false;
     @tracked cancellingRun: WorkflowRunSummary | null = null;
@@ -140,10 +145,7 @@ export default class GuidNodeWorkflowController extends Controller {
     @tracked cancelRunError: string | null = null;
 
     get visibleRuns(): WorkflowRunSummary[] {
-        if (!this.hideCompletedRuns) {
-            return this.runs;
-        }
-        return this.runs.filter(run => run.status === 'running');
+        return this.runs;
     }
 
     get runsWithActions(): Array<
@@ -153,7 +155,7 @@ export default class GuidNodeWorkflowController extends Controller {
             return [];
         }
         const currentNodeId = this.node.id;
-        const hasAdminPermission = Boolean(this.node && this.node.userHasAdminPermission);
+        const hasAdminPermission = this.node.currentUserPermissions?.includes(Permission.Admin) ?? false;
         const filtered = this.hideCompletedRuns
             ? this.runs.filter(run => run.status === 'running')
             : this.runs;
@@ -162,6 +164,9 @@ export default class GuidNodeWorkflowController extends Controller {
             const canCancel = hasAdminPermission && !isCompleted && run.node_id === currentNodeId;
             return {
                 ...run,
+                started_at: this.formatDate(run.started_at),
+                created: this.formatDate(run.created),
+                completed_at: this.formatDate(run.completed_at),
                 projectUrl: pathJoin(config.OSF.url, run.node_id),
                 isCurrentProject: run.node_id === currentNodeId,
                 canCancel,
@@ -174,6 +179,8 @@ export default class GuidNodeWorkflowController extends Controller {
     @tracked isRefreshingTasks = false;
     @tracked tasksLoaded = false;
     @tracked hideCompletedTasks = true;
+    @tracked tasksLimit = 25;
+    tasksLimitOptions = [25, 50, 100];
 
     get tasksWithActions(): Array<
         WorkflowTaskSummary & {
@@ -184,11 +191,10 @@ export default class GuidNodeWorkflowController extends Controller {
             return [];
         }
         const currentNodeId = this.node.id;
-        const filtered = this.hideCompletedTasks
-            ? this.tasks.filter(task => task.task_status === 'running')
-            : this.tasks;
-        return filtered.map(task => ({
+        return this.tasks.map(task => ({
             ...task,
+            created: this.formatDate(task.created),
+            due: this.formatDate(task.due),
             canComplete: task.can_complete !== false,
             assigneeDisplay: this.assigneeLabel(task.assignee),
             projectUrl: pathJoin(config.OSF.url, task.node_id),
@@ -220,7 +226,7 @@ export default class GuidNodeWorkflowController extends Controller {
     }
 
     get canStartWorkflow(): boolean {
-        return Boolean(this.node && this.node.userHasWritePermission);
+        return this.node?.currentUserPermissions?.includes(Permission.Write) ?? false;
     }
 
     get selectedTemplate(): WorkflowTemplate | undefined {
@@ -235,10 +241,38 @@ export default class GuidNodeWorkflowController extends Controller {
         return (this.node && this.node.title) || this.intl.t('workflow.console.heading') as string;
     }
 
+    @action
+    async acceptPending(entry: PendingTemplate): Promise<void> {
+        await this.currentUser.authenticatedAJAX({
+            url: `${this.apiBaseUrl}templates/${entry.id}/activation/`,
+            type: 'PUT',
+            data: JSON.stringify({ is_enabled: true }),
+            contentType: 'application/json',
+        });
+        this.pendingTemplates = this.pendingTemplates.filter(t => t.id !== entry.id);
+        const response: { data: WorkflowActivationApiResponse[] } = await this.currentUser.authenticatedAJAX({
+            url: `${this.apiBaseUrl}activations/`,
+            type: 'GET',
+        });
+        this.templates = normalizeTemplates(response.data);
+    }
+
+    @action
+    async dismissPending(entry: PendingTemplate): Promise<void> {
+        await this.currentUser.authenticatedAJAX({
+            url: `${this.apiBaseUrl}templates/${entry.id}/activation/`,
+            type: 'PUT',
+            data: JSON.stringify({ is_dismissed: true }),
+            contentType: 'application/json',
+        });
+        this.pendingTemplates = this.pendingTemplates.filter(t => t.id !== entry.id);
+    }
+
     initialize(model: WorkflowRouteModel, hash: string): void {
         this.node = model.node;
         this.apiBaseUrl = ensureTrailingSlash(model.apiBaseUrl);
         this.templates = model.templates;
+        this.pendingTemplates = model.pendingTemplates;
         this.templatesError = model.templatesError || null;
 
         this.runStatusLabels = {
@@ -379,12 +413,37 @@ export default class GuidNodeWorkflowController extends Controller {
     toggleHideCompletedRuns(event: Event): void {
         const target = event.target as HTMLInputElement | null;
         this.hideCompletedRuns = Boolean(target && target.checked);
+        this.refreshAll();
+    }
+
+    @action
+    changeRunsLimit(event: Event): void {
+        const target = event.target as HTMLSelectElement | null;
+        if (target) {
+            this.runsLimit = parseInt(target.value, 10);
+            this.refreshAll();
+        }
     }
 
     @action
     toggleHideCompletedTasks(event: Event): void {
         const target = event.target as HTMLInputElement | null;
         this.hideCompletedTasks = Boolean(target && target.checked);
+        this.refreshAll();
+    }
+
+    @action
+    changeTasksLimit(event: Event): void {
+        const target = event.target as HTMLSelectElement | null;
+        if (target) {
+            this.tasksLimit = parseInt(target.value, 10);
+            this.refreshAll();
+        }
+    }
+
+    @action
+    async refreshAll(): Promise<void> {
+        await Promise.all([this.refreshRuns(), this.refreshTasks()]);
     }
 
     @action
@@ -398,7 +457,10 @@ export default class GuidNodeWorkflowController extends Controller {
             const response = await this.currentUser.authenticatedAJAX({
                 url: `${this.apiBaseUrl}runs/`,
                 type: 'GET',
-                data: { limit: 25 },
+                data: {
+                    limit: this.runsLimit,
+                    ...(this.hideCompletedRuns ? { status: 'running' } : {}),
+                },
             });
             const data = (response && (response as any).data) || [];
             this.runs = data.map((entry: any) => {
@@ -461,7 +523,7 @@ export default class GuidNodeWorkflowController extends Controller {
             });
 
             this.closeCancelDialog();
-            await this.refreshRuns();
+            await this.refreshAll();
         } catch (error) {
             this.cancelRunError = extractMessage(
                 error,
@@ -486,7 +548,10 @@ export default class GuidNodeWorkflowController extends Controller {
             const response = await this.currentUser.authenticatedAJAX({
                 url: `${this.apiBaseUrl}tasks/`,
                 type: 'GET',
-                data: { limit: 25 },
+                data: {
+                    limit: this.tasksLimit,
+                    ...(this.hideCompletedTasks ? { status: 'active' } : {}),
+                },
             });
             this.tasks = (response as any).data;
             this.tasksLoaded = true;
@@ -525,6 +590,8 @@ export default class GuidNodeWorkflowController extends Controller {
             if (!data) {
                 throw new Error('Task payload not found.');
             }
+            data.created = this.formatDate(data.created);
+            data.due = this.formatDate(data.due);
             this.selectedTask = data;
         } catch (error) {
             if (isAjaxError(error)) {
@@ -578,7 +645,7 @@ export default class GuidNodeWorkflowController extends Controller {
             await this.pollJobStatus(response.data.status_url);
 
             this.taskActionSuccess = this.intl.t('workflow.console.tasks.submitSuccess') as string;
-            await this.refreshTasks();
+            await this.refreshAll();
 
             const nextTask = this.tasksWithActions.find(
                 task => task.process_instance_id === processInstanceId && task.canComplete,
@@ -669,8 +736,7 @@ export default class GuidNodeWorkflowController extends Controller {
             await this.pollJobStatus(response.data.status_url);
 
             this.submitSuccess = this.intl.t('workflow.console.startSuccess') as string;
-            this.startFormVariables = [];
-            await this.refreshTasks();
+            await this.refreshAll();
             const hasAssignedTasks = this.tasksWithActions.some(task => task.canComplete);
             if (hasAssignedTasks) {
                 this.activeTab = 'tasks';

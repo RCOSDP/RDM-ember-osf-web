@@ -25,6 +25,9 @@ export interface WorkflowTemplateApiResponse {
     node_title?: string;
     is_local: boolean;
     is_active: boolean;
+    is_effectively_active?: boolean;
+    auto_activate?: boolean;
+    activation_id?: string | null;
     definition_form_schema: {
         fields: WorkflowTaskField[];
         data?: unknown;
@@ -50,9 +53,15 @@ export interface WorkflowTemplate {
     };
 }
 
+export interface PendingTemplate {
+    id: string;
+    displayLabel: string;
+}
+
 export interface WorkflowRouteModel {
     node: Node;
     templates: WorkflowTemplate[];
+    pendingTemplates: PendingTemplate[];
     apiBaseUrl: string;
     templatesError?: string | null;
 }

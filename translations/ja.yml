@@ -1972,6 +1972,10 @@ workflow:
     console:
         heading: ワークフローコンソール
         description: このプロジェクトに登録されたワークフローを起動し、実行を管理します。
+        pendingTemplates:
+            heading: 利用可能なワークフロー
+            activate: 有効化
+            dismiss: 非表示にする
         startSectionTitle: ワークフローを開始
         workflowLabel: ワークフロー
         selectPrompt: ワークフローを選択してください…
@@ -1993,6 +1997,7 @@ workflow:
         startSuccess: ワークフローを開始しました。
         startFailed: ワークフローを開始できませんでした。
         refresh: 更新
+        displayCount: '表示件数:'
         close: 閉じる
         tab:
             start: 実行
