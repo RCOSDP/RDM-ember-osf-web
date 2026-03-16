@@ -26,8 +26,6 @@ export default class SingleSelectPulldownInput extends Component {
     onInput!: () => void;
     onMetadataInput!: () => void;
 
-    anotherOption?: string;
-
     didReceiveAttrs() {
         assert(
             'SchemaBlockRenderer::Editable::SingleSelectPulldownInput requires optionBlocks to render',
@@ -39,9 +37,6 @@ export default class SingleSelectPulldownInput extends Component {
     get optionBlockValues() {
         const options = this.optionBlocks
             .map(item => this.getLocalizedItemText(item));
-        if (this.anotherOption) {
-            options.push(this.anotherOption);
-        }
         return options;
     }
 
@@ -53,15 +48,6 @@ export default class SingleSelectPulldownInput extends Component {
         this.changeset.set(this.valuePath, result);
         this.onMetadataInput();
         this.onInput();
-        this.set('anotherOption', null);
-    }
-
-    @action
-    onInputSearch(text: string) {
-        if (!this.optionBlocks.find(item => item.displayText === text || this.getLocalizedItemText(item) === text)) {
-            this.set('anotherOption', text);
-        }
-        return true;
     }
 
     getLocalizedItemText(item: SchemaBlock) {
