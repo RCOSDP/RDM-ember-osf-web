@@ -101,12 +101,7 @@ export default class Text extends Component {
         const input = event.target as HTMLInputElement;
         const text = input.value;
         this.changeset.set(this.valuePath, text);
-        if (text) {
-            run.debounce(this, this._doSearch, text, 300);
-        } else {
-            this.set('suggestionResults', []);
-            this.set('showSuggestions', false);
-        }
+        run.debounce(this, this._doSearch, text, 300);
         this.onInput();
     }
 

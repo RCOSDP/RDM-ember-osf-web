@@ -1,5 +1,5 @@
 {{#if @open}}
-    <div class="modal fade in workflow-task-dialog" tabindex="-1" role="dialog" aria-modal="true" style="display: block;">
+    <div class="modal fade in workflow-task-dialog" tabindex="-1" role="dialog" aria-modal="true" style="display: block; z-index: 1030;">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -29,6 +29,7 @@
                             <GuidNode::Workflow::-Components::ProgressSidebar
                                 @form={{@task.form}}
                                 @variables={{@task.variables}}
+                                @wizardSteps={{if this.wizardNav this.wizardNav.progressSteps}}
                             />
                             <div class="task-dialog__content">
                                 <dl class="dl-horizontal">
@@ -56,7 +57,10 @@
                                     @form={{@task.form}}
                                     @variables={{@task.variables}}
                                     @node={{@node}}
+                                    @taskId={{@task.id}}
                                     @onChange={{this.handleFormChange}}
+                                    @onSubmit={{this.handleSubmit}}
+                                    @onWizardNavigationChange={{this.handleWizardNavigationChange}}
                                 />
                             </div>
                         </div>
@@ -65,7 +69,42 @@
                     {{/if}}
                 </div>
                 <div class="modal-footer">
-                    {{#if this.hasTask}}
+                    {{#if (and this.hasTask this.isWizardMode this.wizardNav)}}
+                        {{#if (and this.wizardNav.allowBack (not this.wizardNav.isFirstPage))}}
+                            <button
+                                type="button"
+                                class="btn btn-default"
+                                disabled={{@isSubmitting}}
+                                {{on "click" this.wizardNav.goBack}}
+                            >
+                                {{t 'workflow.console.tasks.dialog.wizard.back'}}
+                            </button>
+                        {{/if}}
+                        {{#if this.wizardNav.isLastPage}}
+                            <button
+                                type="button"
+                                class="btn btn-primary"
+                                disabled={{or (not this.canComplete) (not this.wizardNav.canGoNext) @isSubmitting}}
+                                {{on "click" this.wizardNav.submit}}
+                            >
+                                {{#if @isSubmitting}}
+                                    <i class="fa fa-spinner fa-spin"></i>
+                                    {{t 'workflow.console.tasks.dialog.submitting'}}
+                                {{else}}
+                                    {{t 'workflow.console.tasks.dialog.submit'}}
+                                {{/if}}
+                            </button>
+                        {{else}}
+                            <button
+                                type="button"
+                                class="btn btn-primary"
+                                disabled={{not this.wizardNav.canGoNext}}
+                                {{on "click" this.wizardNav.goNext}}
+                            >
+                                {{t 'workflow.console.tasks.dialog.wizard.next'}}
+                            </button>
+                        {{/if}}
+                    {{else if (and this.hasTask (not this.isWizardMode))}}
                         <button
                             type="button"
                             class="btn btn-primary"
@@ -88,5 +127,5 @@
             </div>
         </div>
     </div>
-    <div class="modal-backdrop fade in"></div>
+    <div class="modal-backdrop fade in" style="z-index: 1020;"></div>
 {{/if}}

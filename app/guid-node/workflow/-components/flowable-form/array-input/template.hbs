@@ -1,0 +1,37 @@
+<div local-class="ArrayInput" {{did-insert this.initialize}}>
+    {{#each this.rowForms as |entry|}}
+        <div local-class="ArrayInput__row">
+            <div local-class="ArrayInput__rowHeader">
+                <span local-class="ArrayInput__rowIndex">{{entry.label}}</span>
+                {{#unless @disabled}}
+                    <button
+                        type="button"
+                        class="btn btn-xs btn-danger"
+                        {{on "click" (fn this.removeRow entry.row.key)}}
+                    >
+                        <i class="fa fa-trash"></i>
+                    </button>
+                {{/unless}}
+            </div>
+            <GuidNode::Workflow::-Components::FlowableForm
+                @form={{entry.form}}
+                @variables={{entry.variables}}
+                @node={{@node}}
+                @fieldHints={{@fieldHints}}
+                @onChange={{fn this.handleRowChange entry.row.key}}
+            />
+        </div>
+    {{/each}}
+
+    {{#unless @disabled}}
+        <button
+            type="button"
+            class="btn btn-sm btn-default"
+            local-class="ArrayInput__addButton"
+            {{on "click" this.addRow}}
+        >
+            <i class="fa fa-plus"></i>
+            {{t 'workflow.console.tasks.dialog.arrayInput.add'}}
+        </button>
+    {{/unless}}
+</div>

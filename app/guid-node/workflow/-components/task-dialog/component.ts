@@ -6,6 +6,7 @@ import { tracked } from '@glimmer/tracking';
 import Intl from 'ember-intl/services/intl';
 import Node from 'ember-osf-web/models/node';
 
+import { extractWizardConfig, WizardNavigation } from '../wizard-form/types';
 import {
     TaskDialogSubmission,
     WorkflowTaskDetail,
@@ -29,6 +30,7 @@ export default class WorkflowTaskDialog extends Component<WorkflowTaskDialogArgs
     @service intl!: Intl;
     @tracked formVariables: WorkflowVariable[] = [];
     @tracked isFormValid = true;
+    @tracked wizardNav: WizardNavigation | null = null;
 
     get hasTask(): boolean {
         return Boolean(this.args.task);
@@ -64,6 +66,11 @@ export default class WorkflowTaskDialog extends Component<WorkflowTaskDialogArgs
         return assignee;
     }
 
+    get isWizardMode(): boolean {
+        const { task } = this.args;
+        return Boolean(task && task.form && extractWizardConfig(task.form.fields));
+    }
+
     get canComplete(): boolean {
         const { task } = this.args;
         return !task || task.can_complete !== false;
@@ -81,6 +88,11 @@ export default class WorkflowTaskDialog extends Component<WorkflowTaskDialogArgs
     handleFormChange(variables: WorkflowVariable[], isValid: boolean): void {
         this.formVariables = variables;
         this.isFormValid = isValid;
+    }
+
+    @action
+    handleWizardNavigationChange(nav: WizardNavigation): void {
+        this.wizardNav = nav;
     }
 
     @action

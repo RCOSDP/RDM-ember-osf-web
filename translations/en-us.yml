@@ -2085,6 +2085,10 @@ workflow:
                 next: 'Next'
                 progressTitle: 'Progress'
                 submitting: 'Submitting...'
+                wizard:
+                    back: 'Back'
+                    next: 'Next'
+
                 projectMetadataSelector:
                     loading: 'Loading metadata records...'
                     refresh: 'Refresh'
@@ -2098,6 +2102,7 @@ workflow:
                     refresh: 'Refresh'
                     noRecordsPrefix: 'No file metadata has been registered. You can edit file metadata on the project page and register it in this form'
                     path: 'Path'
-                    manager: 'Manager'
                 exportTarget:
                     loading: 'Loading export targets...'
+                arrayInput:
+                    add: 'Add'

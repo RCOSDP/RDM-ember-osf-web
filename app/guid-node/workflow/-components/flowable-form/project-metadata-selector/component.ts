@@ -37,6 +37,7 @@ interface ProjectMetadataSelectorArgs {
     multiSelect: boolean;
     value: FieldValueWithType | undefined;
     onChange: (valueWithType: FieldValueWithType) => void;
+    onLoadingChange?: (isLoading: boolean) => void;
     disabled: boolean;
 }
 
@@ -113,7 +114,10 @@ export default class ProjectMetadataSelector extends Component<ProjectMetadataSe
     initialize() {
         if (!this.isInitialized) {
             this.isInitialized = true;
-            this.loadMetadataRecords.perform();
+            this.args.onLoadingChange?.(true);
+            this.loadMetadataRecords.perform().finally(() => {
+                this.args.onLoadingChange?.(false);
+            });
         }
     }
 
@@ -122,21 +126,15 @@ export default class ProjectMetadataSelector extends Component<ProjectMetadataSe
         if (!this.args.value) {
             return;
         }
+        // Restore UI selection state from parent value.
+        // No need to notify back — parent already holds the value.
+        const guids = this.extractGuidsFromValue(this.args.value);
         if (this.isMultiSelect) {
-            if (this.selectedGuids.length > 0) {
-                return;
-            }
-            const guids = this.extractGuidsFromValue(this.args.value);
-            if (guids.length > 0) {
+            if (this.selectedGuids.length === 0 && guids.length > 0) {
                 this.selectedGuids = guids;
-                this.notifyRecordsSelected(guids);
             }
-        } else if (!this.selectedGuid) {
-            const guid = this.extractGuidsFromValue(this.args.value)[0];
-            if (guid) {
-                this.selectedGuid = guid;
-                this.notifyRecordSelected(guid);
-            }
+        } else if (!this.selectedGuid && guids[0]) {
+            this.selectedGuid = guids[0];
         }
     }
 

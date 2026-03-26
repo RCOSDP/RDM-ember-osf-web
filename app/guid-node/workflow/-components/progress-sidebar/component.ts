@@ -12,6 +12,7 @@ import {
 interface ProgressSidebarArgs {
     form?: WorkflowTaskForm;
     variables?: WorkflowVariable[];
+    wizardSteps?: ProgressStep[];
 }
 
 export default class ProgressSidebar extends Component<ProgressSidebarArgs> {
@@ -26,10 +27,16 @@ export default class ProgressSidebar extends Component<ProgressSidebarArgs> {
     }
 
     get hasProgressSteps(): boolean {
+        if (this.args.wizardSteps) {
+            return this.args.wizardSteps.length > 0;
+        }
         return this.parsedExpression.steps.length > 0;
     }
 
     get progressSteps(): ProgressStep[] {
+        if (this.args.wizardSteps) {
+            return this.args.wizardSteps;
+        }
         return this.parsedExpression.steps;
     }
 }

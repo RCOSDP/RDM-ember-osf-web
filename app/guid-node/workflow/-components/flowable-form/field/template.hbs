@@ -1,4 +1,10 @@
-<div class="form-group {{if this.hasError 'has-error'}}" ...attributes>
+<div
+    class="form-group {{if this.hasError 'has-error'}}"
+    style={{this.widthStyle}}
+    {{did-insert this.onFieldInsert}}
+    {{will-destroy this.onFieldDestroy}}
+    ...attributes
+>
     {{#if this.isExpression}}
         {{#if this.hasProgressSteps}}
             {{#if this.remainingExpressionText}}
@@ -45,22 +51,40 @@
                 </label>
             </div>
         {{else if this.isSelect}}
-            <select
-                id={{this.fieldId}}
-                class="form-control"
-                disabled={{this.isReadOnly}}
-                required={{this.isRequired}}
-                {{on "change" this.handleChange}}
-            >
-                <option value="">{{t 'workflow.console.tasks.dialog.selectPlaceholder'}}</option>
-                {{#if this.hasOptions}}
+            {{#if this.isFreetext}}
+                <input
+                    id={{this.fieldId}}
+                    type="text"
+                    class="form-control"
+                    list="{{this.fieldId}}-options"
+                    value={{this.stringValue}}
+                    disabled={{this.isReadOnly}}
+                    required={{this.isRequired}}
+                    {{on "input" this.handleChange}}
+                />
+                <datalist id="{{this.fieldId}}-options">
                     {{#each this.optionsWithValue as |item|}}
-                        <option value={{item.value}} selected={{eq item.value this.stringValue}}>
-                            {{or item.option.name item.value}}
-                        </option>
+                        <option value={{or item.option.name item.value}} />
                     {{/each}}
-                {{/if}}
-            </select>
+                </datalist>
+            {{else}}
+                <select
+                    id={{this.fieldId}}
+                    class="form-control"
+                    disabled={{this.isReadOnly}}
+                    required={{this.isRequired}}
+                    {{on "change" this.handleChange}}
+                >
+                    <option value="">{{t 'workflow.console.tasks.dialog.selectPlaceholder'}}</option>
+                    {{#if this.hasOptions}}
+                        {{#each this.optionsWithValue as |item|}}
+                            <option value={{item.value}} selected={{eq item.value this.stringValue}}>
+                                {{or item.option.name item.value}}
+                            </option>
+                        {{/each}}
+                    {{/if}}
+                </select>
+            {{/if}}
         {{else if this.isRadio}}
             {{#each this.optionsWithValue as |item|}}
                 <div class="radio">
@@ -118,6 +142,7 @@
                 @multiSelect={{this.projectMetadataMultiSelect}}
                 @value={{this.currentValue}}
                 @onChange={{this.handleProjectMetadataSelection}}
+                @onLoadingChange={{this.handleLoadingChange}}
                 @disabled={{this.isReadOnly}}
             />
         {{else if this.isFileMetadataSelector}}
@@ -127,6 +152,7 @@
                 @multiSelect={{this.fileMetadataMultiSelect}}
                 @value={{this.currentValue}}
                 @onChange={{this.handleFileMetadataSelection}}
+                @onLoadingChange={{this.handleLoadingChange}}
                 @disabled={{this.isReadOnly}}
             />
         {{else if this.isFileSelector}}
@@ -134,6 +160,18 @@
                 @node={{@node}}
                 @value={{this.currentValue}}
                 @onChange={{this.handleFileSelectorChange}}
+                @onLoadingChange={{this.handleLoadingChange}}
+                @disabled={{this.isReadOnly}}
+            />
+        {{else if this.isFileUploader}}
+            <GuidNode::Workflow::-Components::FlowableForm::FileUploader
+                @node={{@node}}
+                @fieldId={{this.args.field.id}}
+                @path={{this.fileUploaderPlaceholder.path}}
+                @acceptExtensions={{this.fileUploaderPlaceholder.acceptExtensions}}
+                @value={{this.currentValue}}
+                @onChange={{this.handleFileUploaderChange}}
+                @onLoadingChange={{this.handleLoadingChange}}
                 @disabled={{this.isReadOnly}}
             />
         {{else if this.isExportTarget}}
@@ -141,6 +179,16 @@
                 @node={{@node}}
                 @value={{this.currentValue}}
                 @onChange={{this.handleExportTargetChange}}
+                @onLoadingChange={{this.handleLoadingChange}}
+                @disabled={{this.isReadOnly}}
+            />
+        {{else if this.isArrayInput}}
+            <GuidNode::Workflow::-Components::FlowableForm::ArrayInput
+                @fields={{this.arrayInputFields}}
+                @value={{this.currentValue}}
+                @node={{@node}}
+                @fieldHints={{this.arrayFieldHints}}
+                @onChange={{this.handleArrayInputChange}}
                 @disabled={{this.isReadOnly}}
             />
         {{else if this.isTextarea}}
@@ -162,6 +210,31 @@
                 required={{this.isRequired}}
                 {{on "change" this.handleChange}}
             />
+        {{else if this.hasSuggestion}}
+            <div local-class="typeahead-container">
+                <input
+                    id={{this.fieldId}}
+                    type="text"
+                    class="form-control"
+                    value={{this.stringValue}}
+                    disabled={{this.isReadOnly}}
+                    required={{this.isRequired}}
+                    {{on "input" this.onTypeaheadInput}}
+                    {{on "blur" this.onTypeaheadBlur}}
+                />
+                {{#if this.showSuggestions}}
+                    <ul local-class="typeahead-dropdown">
+                        {{#each this.suggestionItems as |item|}}
+                            <li
+                                local-class="typeahead-item"
+                                {{on "mousedown" (fn this.onSuggestionSelect item.key)}}
+                            >
+                                {{{item.html}}}
+                            </li>
+                        {{/each}}
+                    </ul>
+                {{/if}}
+            </div>
         {{else}}
             <input
                 id={{this.fieldId}}
@@ -175,7 +248,7 @@
             />
         {{/if}}
 
-        {{#if this.hasError}}
+        {{#if this.hasRequiredError}}
             <span class="help-block">{{t 'workflow.console.tasks.dialog.fieldRequired'}}</span>
         {{/if}}
     {{/if}}

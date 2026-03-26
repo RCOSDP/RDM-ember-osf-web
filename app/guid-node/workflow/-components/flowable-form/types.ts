@@ -25,6 +25,7 @@ interface WorkflowTaskField {
 interface FieldValueWithType {
     value: unknown;
     type: string;
+    valid?: boolean;
 }
 
 export {

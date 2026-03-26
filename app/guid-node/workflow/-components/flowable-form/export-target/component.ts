@@ -12,6 +12,7 @@ interface ExportTargetArgs {
     node: Node;
     value: FieldValueWithType | undefined;
     onChange: (valueWithType: FieldValueWithType) => void;
+    onLoadingChange?: (isLoading: boolean) => void;
     disabled: boolean;
 }
 
@@ -36,7 +37,10 @@ export default class ExportTarget extends Component<ExportTargetArgs> {
 
     @action
     initialize() {
-        this.loadProviders.perform();
+        this.args.onLoadingChange?.(true);
+        this.loadProviders.perform().finally(() => {
+            this.args.onLoadingChange?.(false);
+        });
     }
 
     @action

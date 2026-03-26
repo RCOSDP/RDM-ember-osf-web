@@ -19,6 +19,7 @@ interface FileSelectorArgs {
     node: Node;
     value: FieldValueWithType | undefined;
     onChange: (valueWithType: FieldValueWithType) => void;
+    onLoadingChange?: (isLoading: boolean) => void;
     disabled: boolean;
 }
 
@@ -61,7 +62,10 @@ export default class FileSelector extends Component<FileSelectorArgs> {
 
     @action
     initialize() {
-        this.loadProvider.perform();
+        this.args.onLoadingChange?.(true);
+        this.loadProvider.perform().finally(() => {
+            this.args.onLoadingChange?.(false);
+        });
     }
 
     private emitValue(): void {
