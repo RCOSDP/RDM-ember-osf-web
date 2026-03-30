@@ -23,6 +23,7 @@ export interface Question extends AbstractQuestion {
     title: string;
     nav: string;
     help?: string;
+    readonly?: boolean;
 }
 
 export interface Page {
