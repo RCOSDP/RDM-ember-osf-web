@@ -55,10 +55,9 @@ export default class SchemaBlockGroupRenderer extends Component {
     }
 
     @computed('schemaBlockGroup.inputBlock.ui')
-    get uiSubLabel(): string | undefined {
+    get inputBlockUI() {
         const inputBlock = this.schemaBlockGroup.inputBlock;
-        const ui = inputBlock && inputBlock.ui;
-        return ui && ui.sub_label;
+        return inputBlock && inputBlock.ui;
     }
 
     @computed('schemaBlockGroup.groupType')

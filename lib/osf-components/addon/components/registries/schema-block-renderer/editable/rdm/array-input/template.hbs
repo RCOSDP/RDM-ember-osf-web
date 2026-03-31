@@ -18,6 +18,7 @@
                 />
             {{/let}}
             <OsfButton local-class='array-input-remove-button'
+              @type='danger'
               @onClick={{action this.onRemove subChangeset}}
             >
                 {{this.schemaBlock.rowAdditionCaption}}{{t 'metadata.array-input.remove-item'}}

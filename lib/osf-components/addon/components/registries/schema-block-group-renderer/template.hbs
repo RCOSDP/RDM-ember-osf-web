@@ -8,7 +8,10 @@
                 @renderStrategy={{@renderStrategy}}
                 @isRequired={{this.isRequired}}
                 @isFieldsetGroup={{true}}
-                @uiSubLabel={{this.uiSubLabel}}
+                @inputBlockUI={{this.inputBlockUI}}
+                @tagDefs={{@tagDefs}}
+                @changeset={{@changeset}}
+                @checkMarkKeys={{@checkMarkKeys}}
             />
         {{/each}}
     </fieldset>
@@ -21,7 +24,10 @@
             @renderStrategy={{@renderStrategy}}
             @isRequired={{this.isRequired}}
             @isFieldsetGroup={{false}}
-            @uiSubLabel={{this.uiSubLabel}}
+            @inputBlockUI={{this.inputBlockUI}}
+            @tagDefs={{@tagDefs}}
+            @changeset={{@changeset}}
+            @checkMarkKeys={{@checkMarkKeys}}
         />
     {{/each}}
 {{/if}}

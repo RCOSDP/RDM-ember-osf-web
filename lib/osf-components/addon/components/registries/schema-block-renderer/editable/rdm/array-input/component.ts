@@ -116,7 +116,7 @@ export default class ArrayInput extends Component {
         if (!children) {
             return [];
         }
-        return buildVisualItems(children, text => this.getLocalizedText(text));
+        return buildVisualItems(children, text => this.getLocalizedText(text)).items;
     }
 
     getLocalizedText(text: string) {

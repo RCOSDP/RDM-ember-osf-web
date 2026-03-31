@@ -1,8 +1,9 @@
 import { tagName } from '@ember-decorators/component';
 import Component from '@ember/component';
+import { action } from '@ember/object';
 
 import { layout } from 'ember-osf-web/decorators/component';
-import { VisualItem } from 'ember-osf-web/packages/registration-schema/ui-group';
+import { TagDefs, VisualItem } from 'ember-osf-web/packages/registration-schema/ui-group';
 
 import styles from './styles';
 import template from './template';
@@ -12,4 +13,12 @@ import template from './template';
 export default class UiVisualItems extends Component {
     items!: VisualItem[];
     baseStrategy!: Component;
+    tagDefs?: TagDefs;
+    changeset?: any;
+    isTopLevel: boolean = false;
+
+    @action
+    preventLabelFocus(event: Event) {
+        event.preventDefault();
+    }
 }

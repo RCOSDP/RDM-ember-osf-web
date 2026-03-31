@@ -57,8 +57,8 @@ export interface SchemaBlock {
     rowAdditionCaption?: string;
     suggestion?: string;
     ui?: {
-        group?: string | { id: string; title?: string; bar?: boolean; tags?: string[]; help?: string; info?: string; parent?: string | { id: string; title?: string } };
+        group?: string | { id: string; title?: string; marker?: string; bar?: boolean; tags?: (string | { id: string; info?: string })[]; help?: string; info?: string; parent?: string | { id: string; title?: string } };
         sub_label?: string;
-        item?: { placeholder?: string; width?: string; widget?: string; enabled_if?: object; info?: string; tags?: string[]; freetext?: boolean };
+        item?: { marker?: string; placeholder?: string; width?: string; widget?: string; enabled_if?: object; info?: string; tags?: (string | { id: string; info?: string })[]; freetext?: boolean };
     };
 }

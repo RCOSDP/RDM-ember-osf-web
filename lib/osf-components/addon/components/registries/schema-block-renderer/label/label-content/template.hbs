@@ -1,12 +1,37 @@
 {{assert 'Registries::SchemaBlockRenderer::Label::LabelContent requires a @schemaBlock' @schemaBlock}}
 <p
     ...attributes
-    local-class='DisplayText {{if @displayTextOverride "SubLabel"}}'>
+    local-class='DisplayText {{if this.displayTextOverride "SubLabel"}}'>
+    {{~#if (eq this.itemMarker "circle")~}}◯ {{~/if~}}
     {{~this.localizedDisplayText~}}
     {{~#if (and @isRequired (not @readonly))~}}
         <span local-class='Required'>*</span>
     {{~/if~}}
 </p>
+{{~#each this.itemTags as |tag|~}}
+    <span tabindex='-1' {{on 'click' this.preventLabelFocus}}>
+        <span local-class='TagBadge'>{{~tag.localizedText~}}</span>
+        {{~#if tag.info~}}
+            <BsPopover @triggerEvents={{array 'focus'}}>
+                {{tag.info}}
+            </BsPopover>
+        {{~/if~}}
+    </span>
+{{~/each~}}
+{{~#if this.itemInfo~}}
+    <span local-class='InfoMark' tabindex='-1' {{on 'click' this.preventLabelFocus}}>
+        ⓘ
+        <BsPopover @triggerEvents={{array 'focus'}}>
+            {{this.itemInfo}}
+        </BsPopover>
+    </span>
+{{~/if~}}
+{{~#if (and @changeset @checkMarkKeys)~}}
+    <Registries::ValueCheckMark
+        @changeset={{@changeset}}
+        @keys={{@checkMarkKeys}}
+    />
+{{~/if~}}
 {{#if @isEditableForm}}
     <div local-class='HelpText'>
         {{#each this.localizedHelpTextLines as |lineParts|}}

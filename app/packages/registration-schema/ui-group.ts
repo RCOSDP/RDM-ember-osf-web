@@ -14,9 +14,16 @@ function resolveUI(ui: SchemaBlock['ui']): Record<string, any> | undefined {
     return ui.find((entry: any) => !entry.condition);
 }
 
+export interface ResolvedTag {
+    id: string;
+    localizedText: string;
+    info?: string;
+}
+
 export interface UiGroupDef {
     id: string;
     title?: string;
+    marker?: string;
     bar?: boolean;
     tags?: string[];
     help?: string;
@@ -26,17 +33,74 @@ export interface UiGroupDef {
 
 export interface VisualItem {
     schemaBlockGroup?: SchemaBlockGroup;
-    uiGroup?: UiGroupDef & { localizedTitle?: string };
+    uiGroup?: UiGroupDef & { localizedTitle?: string; localizedInfo?: string; resolvedTags?: ResolvedTag[] };
     children?: VisualItem[];
+    responseKeys?: string[];
 }
+
+function collectTagDefs(tags: any[] | undefined, tagDefs: { [id: string]: { info?: string } }) {
+    if (!tags) {
+        return;
+    }
+    for (const tag of tags) {
+        if (typeof tag === 'object' && tag.id) {
+            tagDefs[tag.id] = { info: tag.info };
+        }
+    }
+}
+
+export function resolveTags(
+    tags: any[] | undefined,
+    tagDefs: { [id: string]: { info?: string } },
+    localizeText: (text: string) => string,
+): ResolvedTag[] | undefined {
+    if (!tags) {
+        return undefined;
+    }
+    return tags.map(tag => {
+        if (typeof tag === 'object') {
+            return {
+                id: tag.id,
+                localizedText: localizeText(tag.id),
+                info: tag.info ? localizeText(tag.info) : undefined,
+            };
+        }
+        const def = tagDefs[tag];
+        if (!def) {
+            throw new Error(`Tag definition not found: ${tag}`);
+        }
+        return {
+            id: tag,
+            localizedText: localizeText(tag),
+            info: def.info ? localizeText(def.info) : undefined,
+        };
+    });
+}
+
+export type TagDefs = { [id: string]: { info?: string } };
 
 export function buildVisualItems(
     groups: SchemaBlockGroup[],
     localizeText: (text: string) => string,
-): VisualItem[] {
+): { items: VisualItem[]; tagDefs: TagDefs } {
     const root: VisualItem[] = [];
     const groupDefs: { [id: string]: UiGroupDef } = {};
     const groupItems: { [id: string]: VisualItem } = {};
+    const tagDefs: { [id: string]: { info?: string } } = {};
+
+    // First pass: collect all tag definitions
+    for (const group of groups) {
+        const ui = resolveUI(group.inputBlock && group.inputBlock.ui);
+        if (!ui) {
+            continue;
+        }
+        if (ui.group && typeof ui.group === 'object') {
+            collectTagDefs(ui.group.tags, tagDefs);
+        }
+        if (ui.item) {
+            collectTagDefs(ui.item.tags, tagDefs);
+        }
+    }
 
     function ensureGroup(id: string): VisualItem {
         if (groupItems[id]) {
@@ -47,6 +111,8 @@ export function buildVisualItems(
             uiGroup: {
                 ...def,
                 localizedTitle: def.title ? localizeText(def.title) : undefined,
+                localizedInfo: def.info ? localizeText(def.info) : undefined,
+                resolvedTags: resolveTags(def.tags, tagDefs, localizeText),
             },
             children: [],
         };
@@ -88,6 +154,7 @@ export function buildVisualItems(
             groupDefs[groupId] = {
                 id: groupDef.id,
                 title: groupDef.title,
+                marker: groupDef.marker,
                 bar: groupDef.bar,
                 tags: groupDef.tags,
                 help: groupDef.help,
@@ -99,5 +166,22 @@ export function buildVisualItems(
         ensureGroup(groupId).children!.push({ schemaBlockGroup: group });
     }
 
-    return root;
+    function collectResponseKeys(items: VisualItem[]): void {
+        for (const item of items) {
+            if (item.children) {
+                collectResponseKeys(item.children);
+            }
+            if (item.schemaBlockGroup && item.schemaBlockGroup.registrationResponseKey) {
+                item.responseKeys = [item.schemaBlockGroup.registrationResponseKey];
+            } else if (item.children) {
+                item.responseKeys = item.children.reduce(
+                    (keys: string[], child) => keys.concat(child.responseKeys || []),
+                    [],
+                );
+            }
+        }
+    }
+    collectResponseKeys(root);
+
+    return { items: root, tagDefs };
 }

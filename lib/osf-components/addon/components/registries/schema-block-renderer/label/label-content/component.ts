@@ -6,6 +6,7 @@ import { inject as service } from '@ember/service';
 import Intl from 'ember-intl/services/intl';
 import { layout } from 'ember-osf-web/decorators/component';
 import { SchemaBlock } from 'ember-osf-web/packages/registration-schema';
+import { resolveTags, TagDefs } from 'ember-osf-web/packages/registration-schema/ui-group';
 import styles from './styles';
 import template from './template';
 
@@ -17,10 +18,47 @@ export default class LabelContent extends Component {
     schemaBlock!: SchemaBlock;
 
     // Optional params
-    displayTextOverride?: string;
+    inputBlockUI?: SchemaBlock['ui'];
+    tagDefs?: TagDefs;
+    changeset?: any;
+    checkMarkKeys?: string[];
 
     // Private property
     shouldShowExample = false;
+
+    @computed('inputBlockUI')
+    get displayTextOverride(): string | undefined {
+        return this.inputBlockUI && this.inputBlockUI.sub_label;
+    }
+
+    @computed('inputBlockUI')
+    get itemMarker(): string | undefined {
+        return this.inputBlockUI && this.inputBlockUI.item && this.inputBlockUI.item.marker;
+    }
+
+    @computed('inputBlockUI')
+    get itemInfo(): string | undefined {
+        const info = this.inputBlockUI && this.inputBlockUI.item && this.inputBlockUI.item.info;
+        return info ? this.getLocalizedText(info) : undefined;
+    }
+
+    @computed('inputBlockUI', 'tagDefs')
+    get itemTags() {
+        const tags = this.inputBlockUI && this.inputBlockUI.item && this.inputBlockUI.item.tags;
+        if (!tags) {
+            return undefined;
+        }
+        if (!this.tagDefs) {
+            console.warn(`[metadata] tagDefs not provided for block with ui.item.tags: ${this.schemaBlock.displayText}`);
+            return undefined;
+        }
+        return resolveTags(tags, this.tagDefs, text => this.getLocalizedText(text));
+    }
+
+    @action
+    preventLabelFocus(event: Event) {
+        event.preventDefault();
+    }
 
     @action
     toggleShouldShowExample() {

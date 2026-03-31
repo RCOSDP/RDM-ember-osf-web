@@ -20,12 +20,17 @@
     flex: auto;
 
     :global(.form-control) {
-        background-color: #f2f6fa;
+        background-color: #f9fbfd;
         border-color: #cad9e6;
+
+        &::placeholder {
+            color: #a6a6a6;
+            opacity: 1;
+        }
     }
 
     :global(.ember-power-select-trigger) {
-        background-color: #f2f6fa;
+        background-color: #f9fbfd;
         border-color: #cad9e6;
         padding: 6px;
     }

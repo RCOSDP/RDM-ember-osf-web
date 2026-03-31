@@ -9,7 +9,7 @@ import { inject as service } from '@ember/service';
 import Intl from 'ember-intl/services/intl';
 import NodeModel from 'ember-osf-web/models/node';
 import { PageManager } from 'ember-osf-web/packages/registration-schema/page-manager';
-import { buildVisualItems, VisualItem } from 'ember-osf-web/packages/registration-schema/ui-group';
+import { buildVisualItems, TagDefs, VisualItem } from 'ember-osf-web/packages/registration-schema/ui-group';
 import DraftRegistrationManager from 'registries/drafts/draft/draft-registration-manager';
 import styles from './styles';
 import template from './template';
@@ -31,12 +31,22 @@ export default class PageRenderer extends Component {
     }
 
     @computed('pageManager.schemaBlockGroups')
-    get visualItems(): VisualItem[] {
+    get _built(): { items: VisualItem[]; tagDefs: TagDefs } {
         const groups = this.pageManager.schemaBlockGroups;
         if (!groups) {
-            return [];
+            return { items: [], tagDefs: {} };
         }
         return buildVisualItems(groups, text => this.localizeText(text));
+    }
+
+    @computed('_built')
+    get visualItems(): VisualItem[] {
+        return this._built.items;
+    }
+
+    @computed('_built')
+    get tagDefs(): TagDefs {
+        return this._built.tagDefs;
     }
 
     localizeText(text: string): string {
