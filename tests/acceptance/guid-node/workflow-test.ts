@@ -53,6 +53,10 @@ function stubWorkflowRequests(
             return Promise.resolve({ data: config.tasks || [] });
         }
 
+        if (url.includes('/workflow/templates/') && method === 'GET') {
+            return Promise.resolve({ data: [] });
+        }
+
         if (url.includes('/workflow/templates/') && method === 'POST') {
             return Promise.resolve({
                 data: {
