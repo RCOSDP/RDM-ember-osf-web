@@ -1,9 +1,9 @@
 import { action } from '@ember/object';
+import { inject as service } from '@ember/service';
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
-import { inject as service } from '@ember/service';
-import { task } from 'ember-concurrency-decorators';
 import { all } from 'ember-concurrency';
+import { task } from 'ember-concurrency-decorators';
 import DS from 'ember-data';
 import Toast from 'ember-toastr/services/toast';
 import $ from 'jquery';
@@ -86,28 +86,6 @@ export default class FileUploader extends Component<FileUploaderArgs> {
             .join(', ');
     }
 
-    private isAcceptedExtension(filename: string): boolean {
-        if (this.args.acceptExtensions.length === 0) {
-            return true;
-        }
-        const pos = filename.lastIndexOf('.');
-        if (pos <= 0) {
-            return false;
-        }
-        const ext = filename.substring(pos).toLowerCase();
-        return this.args.acceptExtensions.includes(ext);
-    }
-
-    // --- Lifecycle ---
-
-    @action
-    initialize() {
-        this.args.onLoadingChange?.(true);
-        this.setupFolder.perform().finally(() => {
-            this.args.onLoadingChange?.(false);
-        });
-    }
-
     // --- Folder setup ---
 
     @task
@@ -184,6 +162,16 @@ export default class FileUploader extends Component<FileUploaderArgs> {
         this.emitValue();
     });
 
+    // --- Lifecycle ---
+
+    @action
+    initialize() {
+        if (this.args.onLoadingChange) { this.args.onLoadingChange(true); }
+        this.setupFolder.perform().finally(() => {
+            if (this.args.onLoadingChange) { this.args.onLoadingChange(false); }
+        });
+    }
+
     @action
     buildUrl(files: File[]): string | undefined {
         if (!this.targetDirectory) {
@@ -207,7 +195,17 @@ export default class FileUploader extends Component<FileUploaderArgs> {
         this.filter = filter;
     }
 
-    // --- Value emission ---
+    private isAcceptedExtension(filename: string): boolean {
+        if (this.args.acceptExtensions.length === 0) {
+            return true;
+        }
+        const pos = filename.lastIndexOf('.');
+        if (pos <= 0) {
+            return false;
+        }
+        const ext = filename.substring(pos).toLowerCase();
+        return this.args.acceptExtensions.includes(ext);
+    }
 
     private emitValue(): void {
         const files = this.allFiles.map(f => ({

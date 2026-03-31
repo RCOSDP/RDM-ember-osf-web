@@ -191,9 +191,9 @@ export default class FileMetadataSelector extends Component<FileMetadataSelector
     initialize() {
         if (!this.isInitialized) {
             this.isInitialized = true;
-            this.args.onLoadingChange?.(true);
+            if (this.args.onLoadingChange) { this.args.onLoadingChange(true); }
             this.loadFileMetadata.perform().finally(() => {
-                this.args.onLoadingChange?.(false);
+                if (this.args.onLoadingChange) { this.args.onLoadingChange(false); }
             });
         }
     }

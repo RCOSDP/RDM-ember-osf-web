@@ -16,6 +16,7 @@ const STOP_CHARS = new Set(['&', '|', '!', '=', '(', ')', "'", ' ', '\t']);
 
 class Parser {
     private pos = 0;
+    // eslint-disable-next-line no-useless-constructor, no-empty-function
     constructor(private source: string) {}
 
     parse(context: Record<string, unknown>): boolean {
@@ -107,7 +108,7 @@ class Parser {
                 return left !== right;
             }
         }
-        return toBool(left);
+        return toBool(left); // eslint-disable-line no-use-before-define
     }
 
     private primary(ctx: Record<string, unknown>): unknown {

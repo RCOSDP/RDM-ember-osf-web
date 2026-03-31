@@ -112,7 +112,7 @@ export default class ArrayInput extends Component {
 
     @computed('schemaBlockGroup.children')
     get visualItems(): VisualItem[] {
-        const children = this.schemaBlockGroup.children;
+        const { children } = this.schemaBlockGroup;
         if (!children) {
             return [];
         }

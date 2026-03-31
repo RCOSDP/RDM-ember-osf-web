@@ -23,6 +23,8 @@
  *   ident       = [a-zA-Z_\u3000-\u9FFF][a-zA-Z0-9_\u3000-\u9FFF-]*
  */
 
+import TemplateParseError from './template-parse-error';
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -63,7 +65,6 @@ interface IfBranch {
     body: AstNode[];
 }
 
-
 type Expr =
     | { type: 'ident'; name: string }
     | { type: 'string'; value: string }
@@ -79,12 +80,6 @@ type Expr =
 // ---------------------------------------------------------------------------
 // Error
 // ---------------------------------------------------------------------------
-
-class TemplateParseError extends Error {
-    constructor(message: string, public pos: number) {
-        super(`Template parse error at ${pos}: ${message}`);
-    }
-}
 
 // ---------------------------------------------------------------------------
 // Tokenizer — split template into text / expr / tag segments
@@ -124,7 +119,7 @@ function tokenize(source: string): Segment[] {
         // Look for close with optional trim dash
         let closePos = -1;
         let trimAfter = false;
-        let searchFrom = contentStart;
+        const searchFrom = contentStart;
         while (searchFrom < source.length) {
             const ci = source.indexOf(closeTag, searchFrom);
             if (ci === -1) {
@@ -172,7 +167,7 @@ function isIdentStart(ch: string): boolean {
 }
 
 function isIdentChar(ch: string): boolean {
-    return /[a-zA-Z0-9_\u3000-\u9FFF\-]/.test(ch);
+    return /[a-zA-Z0-9_\u3000-\u9FFF-]/.test(ch);
 }
 
 class ExprParser {
@@ -190,17 +185,33 @@ class ExprParser {
         return this.source.substr(this.pos, s.length) === s;
     }
 
+    parseExpression(): Expr {
+        this.skipWs();
+        return this.orExpr();
+    }
+
+    readIdent(): string {
+        const start = this.pos;
+        if (!isIdentStart(this.source[this.pos])) {
+            throw new TemplateParseError('expected identifier', this.pos);
+        }
+        this.pos++;
+        while (this.pos < this.source.length && isIdentChar(this.source[this.pos])) {
+            this.pos++;
+        }
+        // Trim trailing hyphens (e.g. prevent matching the dash in "-%}")
+        while (this.pos > start + 1 && this.source[this.pos - 1] === '-') {
+            this.pos--;
+        }
+        return this.source.substring(start, this.pos);
+    }
+
     private peekKeyword(kw: string): boolean {
         if (!this.peek(kw)) {
             return false;
         }
         const after = this.pos + kw.length;
         return after >= this.source.length || !isIdentChar(this.source[after]);
-    }
-
-    parseExpression(): Expr {
-        this.skipWs();
-        return this.orExpr();
     }
 
     private orExpr(): Expr {
@@ -352,23 +363,6 @@ class ExprParser {
         this.pos = end + 1;
         return this.source.substring(start, end);
     }
-
-    readIdent(): string {
-        const start = this.pos;
-        if (!isIdentStart(this.source[this.pos])) {
-            throw new TemplateParseError('expected identifier', this.pos);
-        }
-        this.pos++;
-        while (this.pos < this.source.length && isIdentChar(this.source[this.pos])) {
-            this.pos++;
-        }
-        // Trim trailing hyphens (e.g. prevent matching the dash in "-%}")
-        while (this.pos > start + 1 && this.source[this.pos - 1] === '-') {
-            this.pos--;
-        }
-        return this.source.substring(start, this.pos);
-    }
-
 }
 
 // ---------------------------------------------------------------------------
@@ -394,7 +388,7 @@ function parseTemplate(segments: Segment[]): AstNode[] {
             if (seg.type === 'expr') {
                 const ep = new ExprParser(seg.value);
                 const expr = ep.parseExpression();
-                assertFullyConsumed(ep, '{{ }}');
+                assertFullyConsumed(ep, '{{ }}'); // eslint-disable-line no-use-before-define
                 nodes.push({ type: 'interpolation', expr });
                 pos++;
                 continue;
@@ -407,18 +401,19 @@ function parseTemplate(segments: Segment[]): AstNode[] {
             if (until && tagContent === until) {
                 return nodes;
             }
-            if (tagContent === 'endfor' || tagContent === 'endif' || tagContent.startsWith('elif ') || tagContent === 'else') {
+            if (tagContent === 'endfor' || tagContent === 'endif'
+                || tagContent.startsWith('elif ') || tagContent === 'else') {
                 // Reached a boundary tag — return to caller
                 return nodes;
             }
 
             if (tagContent.startsWith('for ')) {
-                nodes.push(parseFor(tagContent));
+                nodes.push(parseFor(tagContent)); // eslint-disable-line no-use-before-define
                 continue;
             }
 
             if (tagContent.startsWith('if ')) {
-                nodes.push(parseIf(tagContent));
+                nodes.push(parseIf(tagContent)); // eslint-disable-line no-use-before-define
                 continue;
             }
 
@@ -575,6 +570,8 @@ function evalExpr(expr: Expr, ctx: Record<string, unknown>): unknown {
         const args = expr.args.map(a => evalExpr(a, ctx));
         return fn(value, ...args);
     }
+    default:
+        throw new Error(`unknown expr type: ${(expr as any).type}`);
     }
 }
 
@@ -613,6 +610,8 @@ function evaluate(nodes: AstNode[], ctx: Record<string, unknown>): string {
                     break;
                 }
             }
+            break;
+        default:
             break;
         }
     }

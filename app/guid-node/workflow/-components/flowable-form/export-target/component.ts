@@ -37,15 +37,15 @@ export default class ExportTarget extends Component<ExportTargetArgs> {
 
     @action
     initialize() {
-        this.args.onLoadingChange?.(true);
+        if (this.args.onLoadingChange) { this.args.onLoadingChange(true); }
         this.loadProviders.perform().finally(() => {
-            this.args.onLoadingChange?.(false);
+            if (this.args.onLoadingChange) { this.args.onLoadingChange(false); }
         });
     }
 
     @action
     destinationChanged(event: Event) {
-        const value = (event.target as HTMLSelectElement).value;
+        const { value } = (event.target as HTMLSelectElement);
         this.selectedProvider = value;
         this.notifyChange(value);
     }

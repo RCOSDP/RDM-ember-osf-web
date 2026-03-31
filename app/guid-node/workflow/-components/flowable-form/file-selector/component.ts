@@ -5,10 +5,9 @@ import { task } from 'ember-concurrency-decorators';
 
 import FileProviderModel from 'ember-osf-web/models/file-provider';
 import Node from 'ember-osf-web/models/node';
-import { SelectionManager } from 'ember-osf-web/guid-node/package/selection';
-import { WaterButlerFile } from 'ember-osf-web/utils/waterbutler/base';
 
 import { FieldValueWithType } from '../types';
+import NotifyingSelectionManager from './notifying-selection-manager';
 
 interface FileSelectorValue {
     provider: string;
@@ -23,28 +22,9 @@ interface FileSelectorArgs {
     disabled: boolean;
 }
 
-class NotifyingSelectionManager extends SelectionManager {
-    private onUpdate: () => void;
-
-    constructor(onUpdate: () => void) {
-        super();
-        this.onUpdate = onUpdate;
-    }
-
-    setChecked(item: WaterButlerFile, value: boolean) {
-        super.setChecked(item, value);
-        this.onUpdate();
-    }
-}
-
 export default class FileSelector extends Component<FileSelectorArgs> {
     selectionManager: NotifyingSelectionManager;
     @tracked providerName: string = '';
-
-    constructor(owner: unknown, args: FileSelectorArgs) {
-        super(owner, args);
-        this.selectionManager = new NotifyingSelectionManager(() => this.emitValue());
-    }
 
     @task
     loadProvider = task(function *(this: FileSelector) {
@@ -60,11 +40,16 @@ export default class FileSelector extends Component<FileSelectorArgs> {
         this.emitValue();
     });
 
+    constructor(owner: unknown, args: FileSelectorArgs) {
+        super(owner, args);
+        this.selectionManager = new NotifyingSelectionManager(() => this.emitValue());
+    }
+
     @action
     initialize() {
-        this.args.onLoadingChange?.(true);
+        if (this.args.onLoadingChange) { this.args.onLoadingChange(true); }
         this.loadProvider.perform().finally(() => {
-            this.args.onLoadingChange?.(false);
+            if (this.args.onLoadingChange) { this.args.onLoadingChange(false); }
         });
     }
 

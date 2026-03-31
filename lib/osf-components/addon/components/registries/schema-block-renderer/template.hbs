@@ -2,11 +2,11 @@
     <Mapper as |renderers|>
         {{#let (get renderers @schemaBlock.blockType) as |Renderer|}}
             {{#if this.isLabelBlock}}
-            <Renderer @schemaBlock={{@schemaBlock}} @optionBlocks={{@optionBlocks}} @disabled={{this.disabled}} @shouldShowMessages={{this.shouldShowMessages}} @uniqueID={{@uniqueID}} @isRequired={{@isRequired}} @isFieldsetGroup={{@isFieldsetGroup}} @inputBlockUI={{@inputBlockUI}} @tagDefs={{@tagDefs}} @changeset={{@changeset}} @checkMarkKeys={{@checkMarkKeys}} />
+                <Renderer @schemaBlock={{@schemaBlock}} @optionBlocks={{@optionBlocks}} @disabled={{this.disabled}} @shouldShowMessages={{this.shouldShowMessages}} @uniqueID={{@uniqueID}} @isRequired={{@isRequired}} @isFieldsetGroup={{@isFieldsetGroup}} @inputBlockUI={{@inputBlockUI}} @tagDefs={{@tagDefs}} @changeset={{@changeset}} @checkMarkKeys={{@checkMarkKeys}} />
             {{else}}
-            <div style={{this.uiItemStyle}}>
-                <Renderer @schemaBlock={{@schemaBlock}} @optionBlocks={{@optionBlocks}} @disabled={{this.disabled}} @shouldShowMessages={{this.shouldShowMessages}} @uniqueID={{@uniqueID}} @isRequired={{@isRequired}} @isFieldsetGroup={{@isFieldsetGroup}} @inputBlockUI={{@inputBlockUI}} @tagDefs={{@tagDefs}} />
-            </div>
+                <div style={{this.uiItemStyle}}>
+                    <Renderer @schemaBlock={{@schemaBlock}} @optionBlocks={{@optionBlocks}} @disabled={{this.disabled}} @shouldShowMessages={{this.shouldShowMessages}} @uniqueID={{@uniqueID}} @isRequired={{@isRequired}} @isFieldsetGroup={{@isFieldsetGroup}} @inputBlockUI={{@inputBlockUI}} @tagDefs={{@tagDefs}} />
+                </div>
             {{/if}}
         {{/let}}
     </Mapper>

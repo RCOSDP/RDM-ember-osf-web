@@ -1,3 +1,5 @@
+import { ProgressStep } from '../progress-sidebar/utils';
+
 export interface RdmWizardPage {
     id: string;
     title: string;
@@ -43,8 +45,6 @@ export interface RdmWizard {
     fieldHints?: Record<string, FieldHint>;
 }
 
-import { ProgressStep } from '../progress-sidebar/utils';
-
 export interface WizardNavigation {
     isFirstPage: boolean;
     isLastPage: boolean;
@@ -71,7 +71,7 @@ export function extractWizardConfig(fields?: Array<{ id: string; expression?: st
         return null;
     }
     if (!field.expression) {
-        throw new Error(`_rdmWizard field found but expression is empty`);
+        throw new Error('_rdmWizard field found but expression is empty');
     }
     return JSON.parse(field.expression) as RdmWizard;
 }

@@ -2,19 +2,19 @@ import { tagName } from '@ember-decorators/component';
 import Component from '@ember/component';
 import { action, computed } from '@ember/object';
 import { alias } from '@ember/object/computed';
+import { run } from '@ember/runloop';
+import { htmlSafe } from '@ember/template';
 import { ChangesetDef } from 'ember-changeset/types';
 import { layout } from 'ember-osf-web/decorators/component';
 import NodeModel from 'ember-osf-web/models/node';
 import { SchemaBlock } from 'ember-osf-web/packages/registration-schema';
-import DraftRegistrationManager from 'registries/drafts/draft/draft-registration-manager';
 import {
     applyAutofill,
     fetchSuggestions,
     SuggestionConfig,
     SuggestionResult,
 } from 'ember-osf-web/utils/suggestion-api';
-import { htmlSafe } from '@ember/template';
-import { run } from '@ember/runloop';
+import DraftRegistrationManager from 'registries/drafts/draft/draft-registration-manager';
 
 import styles from './styles';
 import template from './template';
@@ -23,7 +23,7 @@ import template from './template';
  * Render a suggestion template with variable substitution and strip HTML for plain text display.
  */
 function renderTemplateAsText(tmpl: string, value: { [field: string]: any }): string {
-    const substituted = tmpl.replace(/\{\{(\w+)\}\}/g, (_match: string, field: string) => {
+    const substituted = tmpl.replace(/\{\{(\w+)\}\}/g, (_: string, field: string) => {
         const v = value[field];
         return v != null ? String(v) : '';
     });
@@ -31,7 +31,7 @@ function renderTemplateAsText(tmpl: string, value: { [field: string]: any }): st
 }
 
 function renderTemplateAsHtml(tmpl: string, value: { [field: string]: any }): any {
-    const rendered = tmpl.replace(/\{\{(\w+)\}\}/g, (_match: string, field: string) => {
+    const rendered = tmpl.replace(/\{\{(\w+)\}\}/g, (_: string, field: string) => {
         const v = value[field];
         return v != null ? String(v) : '';
     });

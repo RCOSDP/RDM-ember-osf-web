@@ -56,7 +56,7 @@ export default class SchemaBlockGroupRenderer extends Component {
 
     @computed('schemaBlockGroup.inputBlock.ui')
     get inputBlockUI() {
-        const inputBlock = this.schemaBlockGroup.inputBlock;
+        const { inputBlock } = this.schemaBlockGroup;
         return inputBlock && inputBlock.ui;
     }
 

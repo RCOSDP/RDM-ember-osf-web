@@ -2,13 +2,13 @@ import { action } from '@ember/object';
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 
-import { fetchSuggestions, SuggestionResult } from 'ember-osf-web/utils/suggestion-api';
 import { htmlSafe } from '@ember/template';
+import { fetchSuggestions, SuggestionResult } from 'ember-osf-web/utils/suggestion-api';
 
 import { WorkflowVariable } from '../../../types';
-import { FieldHint, SuggestionConfig } from '../../wizard-form/types';
-import { evaluateTemplate, hasTemplateDirectives } from '../../wizard-form/template-evaluator';
 import { parseProgressSteps, ProgressStep } from '../../progress-sidebar/utils';
+import { evaluateTemplate, hasTemplateDirectives } from '../../wizard-form/template-evaluator';
+import { FieldHint, SuggestionConfig } from '../../wizard-form/types';
 import { FlowableFormContext, resolveFlowableType } from '../component';
 import { FieldValueWithType, WorkflowTaskField, WorkflowTaskFieldOption } from '../types';
 import {
@@ -17,7 +17,7 @@ import {
 } from '../utils';
 
 function renderTemplateAsHtml(tmpl: string, value: Record<string, any>): ReturnType<typeof htmlSafe> {
-    const rendered = tmpl.replace(/\{\{(\w+)\}\}/g, (_match: string, field: string) => {
+    const rendered = tmpl.replace(/\{\{(\w+)\}\}/g, (_: string, field: string) => {
         const v = value[field];
         return v != null ? String(v) : '';
     });
@@ -103,23 +103,23 @@ export default class TaskFormField extends Component<TaskFormFieldArgs> {
 
     @action
     onFieldInsert(): void {
-        this.args.onRegister?.(this.args.field.id, this);
+        if (this.args.onRegister) { this.args.onRegister(this.args.field.id, this); }
     }
 
     @action
     onFieldDestroy(): void {
-        this.args.onUnregister?.(this.args.field.id);
+        if (this.args.onUnregister) { this.args.onUnregister(this.args.field.id); }
     }
 
     // --- Hint accessors ---
 
     get hint(): FieldHint | undefined {
-        return this.args.fieldHints?.[this.args.field.id];
+        return this.args.fieldHints && this.args.fieldHints[this.args.field.id];
     }
 
     get suggestionConfigs(): SuggestionConfig[] | null {
-        const configs = this.hint?.suggestion;
-        if (!configs?.length) {
+        const configs = this.hint && this.hint.suggestion;
+        if (!configs || !configs.length) {
             return null;
         }
         return configs.filter((s: SuggestionConfig) => Boolean(s.template));
@@ -130,7 +130,7 @@ export default class TaskFormField extends Component<TaskFormFieldArgs> {
     }
 
     get widthStyle(): string | undefined {
-        const width = this.hint?.ui?.width;
+        const width = this.hint && this.hint.ui && this.hint.ui.width;
         if (width === 'narrow') {
             return 'max-width: 25%;';
         }
@@ -141,7 +141,7 @@ export default class TaskFormField extends Component<TaskFormFieldArgs> {
     }
 
     get isFreetext(): boolean {
-        return this.hint?.ui?.freetext === true;
+        return Boolean(this.hint && this.hint.ui && this.hint.ui.freetext);
     }
 
     // --- Suggestion / typeahead ---
@@ -192,35 +192,6 @@ export default class TaskFormField extends Component<TaskFormFieldArgs> {
         if (config.autofill) {
             this.applyAutofill(config.autofill, result.value);
         }
-    }
-
-    private applyAutofill(autofillMap: Record<string, string>, responseValue: Record<string, any>): void {
-        const formContext = this.args.formContext!;
-        const allHints = this.args.fieldHints || {};
-
-        for (const [targetFieldId, responseField] of Object.entries(autofillMap)) {
-            const rawValue = responseValue[responseField];
-            if (rawValue == null) {
-                continue;
-            }
-            let resolved = String(rawValue);
-            const targetOptionMap = allHints[targetFieldId]?.ui?.optionMap;
-            if (targetOptionMap?.[resolved]) {
-                resolved = targetOptionMap[resolved];
-            }
-            formContext.setFieldValue(targetFieldId, { value: resolved, type: 'string' });
-        }
-    }
-
-    private async doSearch(keyword: string): Promise<void> {
-        const node = this.args.node;
-        if (!node) {
-            return;
-        }
-        const keys = this.suggestionConfigs!.map(c => c.key);
-        const results = await fetchSuggestions(node.id, keys, keyword);
-        this.suggestionResults = results;
-        this.showSuggestions = results.length > 0;
     }
 
     // --- Standard field handlers ---
@@ -295,7 +266,7 @@ export default class TaskFormField extends Component<TaskFormFieldArgs> {
 
     @action
     handleLoadingChange(isLoading: boolean): void {
-        this.args.onLoadingChange?.(this.args.field.id, isLoading);
+        if (this.args.onLoadingChange) { this.args.onLoadingChange(this.args.field.id, isLoading); }
     }
 
     @action
@@ -444,7 +415,7 @@ export default class TaskFormField extends Component<TaskFormFieldArgs> {
         if (!allHints) {
             return undefined;
         }
-        const prefix = this.args.field.id + '.';
+        const prefix = `${this.args.field.id}.`;
         const subHints: Record<string, FieldHint> = {};
         let found = false;
         for (const [key, hint] of Object.entries(allHints)) {
@@ -552,7 +523,7 @@ export default class TaskFormField extends Component<TaskFormFieldArgs> {
         const expression = field.expression || '';
 
         // Step 1: ${...} (Flowable UEL) resolution
-        const uelResolved = expression.replace(/\$\{([^}]+)\}/g, (_match, varName) => {
+        const uelResolved = expression.replace(/\$\{([^}]+)\}/g, (_, varName) => {
             const trimmed = varName.trim();
             const variable = this.args.variables.find(v => v.name === trimmed);
             if (variable) {
@@ -593,5 +564,35 @@ export default class TaskFormField extends Component<TaskFormFieldArgs> {
 
     get remainingExpressionText(): string {
         return this.parsedExpression.remainingText;
+    }
+
+    private applyAutofill(autofillMap: Record<string, string>, responseValue: Record<string, any>): void {
+        const formContext = this.args.formContext!;
+        const allHints = this.args.fieldHints || {};
+
+        for (const [targetFieldId, responseField] of Object.entries(autofillMap)) {
+            const rawValue = responseValue[responseField];
+            if (rawValue == null) {
+                continue;
+            }
+            let resolved = String(rawValue);
+            const targetHint = allHints[targetFieldId];
+            const targetOptionMap = targetHint && targetHint.ui && targetHint.ui.optionMap;
+            if (targetOptionMap && targetOptionMap[resolved]) {
+                resolved = targetOptionMap[resolved];
+            }
+            formContext.setFieldValue(targetFieldId, { value: resolved, type: 'string' });
+        }
+    }
+
+    private async doSearch(keyword: string): Promise<void> {
+        const { node } = this.args;
+        if (!node) {
+            return;
+        }
+        const keys = this.suggestionConfigs!.map(c => c.key);
+        const results = await fetchSuggestions(node.id, keys, keyword);
+        this.suggestionResults = results;
+        this.showSuggestions = results.length > 0;
     }
 }

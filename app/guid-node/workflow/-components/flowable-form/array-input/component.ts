@@ -29,10 +29,6 @@ export default class ArrayInput extends Component<ArrayInputArgs> {
 
     private nextKey = 0;
 
-    private allocateKey(): number {
-        return this.nextKey++;
-    }
-
     get rowForms(): Array<{
         row: ArrayInputRow;
         label: string;
@@ -91,6 +87,10 @@ export default class ArrayInput extends Component<ArrayInputArgs> {
         }
         row.values = values;
         this.notifyChange();
+    }
+
+    private allocateKey(): number {
+        return this.nextKey++;
     }
 
     private buildVariablesForRow(row: ArrayInputRow): WorkflowVariable[] {

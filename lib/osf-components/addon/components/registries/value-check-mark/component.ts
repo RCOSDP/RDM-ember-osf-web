@@ -15,9 +15,9 @@ export default class ValueCheckMark extends Component<Args> {
                 return false;
             }
             if (Array.isArray(value)) {
-                return value.some((row: any) =>
-                    Object.values(row).some((v: any) => v !== null && v !== undefined && v !== ''),
-                );
+                return value.some((row: any) => Object.values(row).some(
+                    (v: any) => v !== null && v !== undefined && v !== '',
+                ));
             }
             return true;
         });

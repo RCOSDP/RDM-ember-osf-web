@@ -35,7 +35,8 @@
         padding: 6px;
     }
 
-    :global(input[type='radio']) {
+    :global([type='radio']) {
+        /* stylelint-disable-next-line property-no-unknown */
         accent-color: #3779b3;
     }
 }

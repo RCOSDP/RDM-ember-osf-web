@@ -114,9 +114,9 @@ export default class ProjectMetadataSelector extends Component<ProjectMetadataSe
     initialize() {
         if (!this.isInitialized) {
             this.isInitialized = true;
-            this.args.onLoadingChange?.(true);
+            if (this.args.onLoadingChange) { this.args.onLoadingChange(true); }
             this.loadMetadataRecords.perform().finally(() => {
-                this.args.onLoadingChange?.(false);
+                if (this.args.onLoadingChange) { this.args.onLoadingChange(false); }
             });
         }
     }
@@ -134,7 +134,7 @@ export default class ProjectMetadataSelector extends Component<ProjectMetadataSe
                 this.selectedGuids = guids;
             }
         } else if (!this.selectedGuid && guids[0]) {
-            this.selectedGuid = guids[0];
+            [this.selectedGuid] = guids;
         }
     }
 

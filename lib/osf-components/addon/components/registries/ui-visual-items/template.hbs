@@ -3,7 +3,7 @@
         <div local-class='UiGroup'>
             {{#if item.uiGroup.localizedTitle}}
                 <div local-class='UiGroupHeading'>
-                    <strong>{{#if (eq item.uiGroup.marker "circle")}}◯ {{/if}}{{item.uiGroup.localizedTitle}}</strong>
+                    <strong>{{#if (eq item.uiGroup.marker 'circle')}}{{this.circleMarker}} {{/if}}{{item.uiGroup.localizedTitle}}</strong>
                     {{#each item.uiGroup.resolvedTags as |tag|}}
                         <span tabindex='-1' {{on 'click' this.preventLabelFocus}}>
                             <span local-class='TagBadge'>{{tag.localizedText}}</span>
@@ -16,7 +16,7 @@
                     {{/each}}
                     {{#if item.uiGroup.localizedInfo}}
                         <span local-class='InfoMark' tabindex='-1' {{on 'click' this.preventLabelFocus}}>
-                            ⓘ
+                            {{this.infoMark}}
                             <BsPopover @triggerEvents={{array 'focus'}}>
                                 {{item.uiGroup.localizedInfo}}
                             </BsPopover>

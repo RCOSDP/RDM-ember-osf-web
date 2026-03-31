@@ -80,7 +80,7 @@ export default class WizardForm extends Component<WizardFormArgs> {
         }
 
         // Restore draft if available
-        const taskId = this.args.taskId;
+        const { taskId } = this.args;
         const formKey = this.args.form.key || '';
         let restoredPageId = '';
         if (taskId) {
@@ -176,7 +176,7 @@ export default class WizardForm extends Component<WizardFormArgs> {
 
     @action
     handleFinalSubmit(): void {
-        const taskId = this.args.taskId;
+        const { taskId } = this.args;
         if (taskId) {
             clearDraft(taskId);
         }
@@ -275,9 +275,9 @@ export default class WizardForm extends Component<WizardFormArgs> {
                 const sourceId = alias[field.id];
                 if (sourceId) {
                     const source = this.allFieldValues[sourceId];
-                    const fv = this.allFieldValues[field.id];
-                    if (source && fv) {
-                        variables.push({ name: field.id, value: source.value, type: fv.type });
+                    const aliasFv = this.allFieldValues[field.id];
+                    if (source && aliasFv) {
+                        variables.push({ name: field.id, value: source.value, type: aliasFv.type });
                     }
                 }
                 continue;
@@ -302,7 +302,7 @@ export default class WizardForm extends Component<WizardFormArgs> {
     }
 
     private saveDraftNow(): void {
-        const taskId = this.args.taskId;
+        const { taskId } = this.args;
         if (!taskId) {
             return;
         }

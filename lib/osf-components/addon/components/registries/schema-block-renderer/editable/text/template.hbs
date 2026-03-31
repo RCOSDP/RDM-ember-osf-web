@@ -9,20 +9,22 @@
             <div local-class='typeahead-container'>
                 <input
                     data-test-text-input
-                    type="text"
-                    class="form-control"
+                    type='text'
+                    class='form-control'
                     value={{or (get @changeset this.valuePath) ''}}
                     oninput={{action this.onTypeaheadInput}}
                     onblur={{action this.onTypeaheadBlur}}
                     placeholder=' '
-                />
+                >
                 {{#if this.showSuggestions}}
                     <ul local-class='typeahead-dropdown'>
                         {{#each this.suggestionItems as |item|}}
+                            {{!-- template-lint-disable no-invalid-interactive --}}
                             <li
                                 local-class='typeahead-item'
                                 onmousedown={{action this.onSuggestionSelect item.key}}
                             >
+                                {{!-- template-lint-disable no-triple-curlies --}}
                                 {{{item.html}}}
                             </li>
                         {{/each}}

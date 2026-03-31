@@ -6,13 +6,13 @@ import { tracked } from '@glimmer/tracking';
 import Intl from 'ember-intl/services/intl';
 import Node from 'ember-osf-web/models/node';
 
-import { extractWizardConfig, WizardNavigation } from '../wizard-form/types';
 import {
     TaskDialogSubmission,
     WorkflowTaskDetail,
     WorkflowVariable,
 } from '../../types';
 import { isFinalStep } from '../progress-sidebar/utils';
+import { extractWizardConfig, WizardNavigation } from '../wizard-form/types';
 
 interface WorkflowTaskDialogArgs {
     open: boolean;

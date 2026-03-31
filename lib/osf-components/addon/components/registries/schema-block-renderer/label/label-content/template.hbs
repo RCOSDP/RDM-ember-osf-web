@@ -1,8 +1,8 @@
 {{assert 'Registries::SchemaBlockRenderer::Label::LabelContent requires a @schemaBlock' @schemaBlock}}
 <p
     ...attributes
-    local-class='DisplayText {{if this.displayTextOverride "SubLabel"}}'>
-    {{~#if (eq this.itemMarker "circle")~}}◯ {{~/if~}}
+    local-class='DisplayText {{if this.displayTextOverride 'SubLabel'}}'>
+    {{~#if (eq this.itemMarker 'circle')~}}{{this.circleMarker}} {{~/if~}}
     {{~this.localizedDisplayText~}}
     {{~#if (and @isRequired (not @readonly))~}}
         <span local-class='Required'>*</span>
@@ -20,7 +20,7 @@
 {{~/each~}}
 {{~#if this.itemInfo~}}
     <span local-class='InfoMark' tabindex='-1' {{on 'click' this.preventLabelFocus}}>
-        ⓘ
+        {{this.infoMark}}
         <BsPopover @triggerEvents={{array 'focus'}}>
             {{this.itemInfo}}
         </BsPopover>

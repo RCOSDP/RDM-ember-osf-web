@@ -41,7 +41,7 @@ export default class SchemaBlockRenderer extends Component {
 
     @computed('schemaBlock.ui')
     get uiItemStyle(): ReturnType<typeof htmlSafe> | undefined {
-        const ui = this.schemaBlock.ui;
+        const { ui } = this.schemaBlock;
         if (!ui || !ui.item || !ui.item.width) {
             return undefined;
         }

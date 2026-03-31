@@ -155,7 +155,8 @@ export default class GuidNodeWorkflowController extends Controller {
             return [];
         }
         const currentNodeId = this.node.id;
-        const hasAdminPermission = this.node.currentUserPermissions?.includes(Permission.Admin) ?? false;
+        const hasAdminPermission = (this.node.currentUserPermissions
+            && this.node.currentUserPermissions.includes(Permission.Admin)) || false;
         const filtered = this.hideCompletedRuns
             ? this.runs.filter(run => run.status === 'running')
             : this.runs;
@@ -226,7 +227,8 @@ export default class GuidNodeWorkflowController extends Controller {
     }
 
     get canStartWorkflow(): boolean {
-        return this.node?.currentUserPermissions?.includes(Permission.Write) ?? false;
+        return (this.node && this.node.currentUserPermissions
+            && this.node.currentUserPermissions.includes(Permission.Write)) || false;
     }
 
     get selectedTemplate(): WorkflowTemplate | undefined {

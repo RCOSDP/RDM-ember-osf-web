@@ -38,7 +38,7 @@ export default class SingleSelectPulldownInput extends Component {
 
     @computed('schemaBlock.ui')
     get allowFreetext(): boolean {
-        const ui = this.schemaBlock.ui;
+        const { ui } = this.schemaBlock;
         return Boolean(ui && ui.item && ui.item.freetext);
     }
 

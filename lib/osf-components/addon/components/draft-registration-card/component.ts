@@ -65,7 +65,7 @@ export default class DraftRegistrationCard extends Component {
 
     @computed('draftRegistration.registrationResponses')
     get wekoItemId(): string | null {
-        return getWekoItemId(this.draftRegistration?.registrationResponses);
+        return getWekoItemId(this.draftRegistration && this.draftRegistration.registrationResponses);
     }
 
     @computed('draftRegistration.registrationSchema.name')
@@ -75,7 +75,7 @@ export default class DraftRegistrationCard extends Component {
 
     @computed('draftRegistration.registrationResponses')
     get workflowRunId(): string | null {
-        return getWorkflowRunId(this.draftRegistration?.registrationResponses);
+        return getWorkflowRunId(this.draftRegistration && this.draftRegistration.registrationResponses);
     }
 
     @computed('draftRegistration.branchedFrom')

@@ -25,6 +25,8 @@ export default class LabelContent extends Component {
 
     // Private property
     shouldShowExample = false;
+    circleMarker = '\u25CB';
+    infoMark = '\u24D8';
 
     @computed('inputBlockUI')
     get displayTextOverride(): string | undefined {
@@ -49,7 +51,6 @@ export default class LabelContent extends Component {
             return undefined;
         }
         if (!this.tagDefs) {
-            console.warn(`[metadata] tagDefs not provided for block with ui.item.tags: ${this.schemaBlock.displayText}`);
             return undefined;
         }
         return resolveTags(tags, this.tagDefs, text => this.getLocalizedText(text));

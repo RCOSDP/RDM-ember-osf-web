@@ -85,7 +85,7 @@ export default class Register extends Component.extend({
 
     @computed('draftRegistration.registrationResponses')
     get wekoItemId(): string | null {
-        return getWekoItemId(this.draftRegistration?.registrationResponses);
+        return getWekoItemId(this.draftRegistration && this.draftRegistration.registrationResponses);
     }
 
     @computed('draftRegistration.registrationSchema.name')

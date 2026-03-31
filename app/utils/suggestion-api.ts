@@ -1,5 +1,5 @@
-import config from 'ember-get-config';
 import { ChangesetDef } from 'ember-changeset/types';
+import config from 'ember-get-config';
 import { SchemaBlock } from 'ember-osf-web/packages/registration-schema';
 import { PageManager } from 'ember-osf-web/packages/registration-schema/page-manager';
 
@@ -55,7 +55,7 @@ export function resolveAutofillKey(currentResponseKey: string, targetFieldId: st
     if (pipeIndex >= 0) {
         return currentResponseKey.substring(0, pipeIndex + 1) + targetFieldId;
     }
-    return '__responseKey_' + targetFieldId;
+    return `__responseKey_${targetFieldId}`;
 }
 
 /**
@@ -79,11 +79,13 @@ function findOptionBlocks(pageManagers: PageManager[], fieldId: string): SchemaB
     const targetSuffix = `_${fieldId}`;
     for (const pm of pageManagers) {
         for (const group of pm.schemaBlockGroups || []) {
-            if (group.registrationResponseKey?.endsWith(targetSuffix) && group.optionBlocks && group.optionBlocks.length) {
+            if (group.registrationResponseKey && group.registrationResponseKey.endsWith(targetSuffix)
+                && group.optionBlocks && group.optionBlocks.length) {
                 return group.optionBlocks;
             }
             for (const child of group.children || []) {
-                if (child.registrationResponseKey?.endsWith(targetSuffix) && child.optionBlocks && child.optionBlocks.length) {
+                if (child.registrationResponseKey && child.registrationResponseKey.endsWith(targetSuffix)
+                    && child.optionBlocks && child.optionBlocks.length) {
                     return child.optionBlocks;
                 }
             }

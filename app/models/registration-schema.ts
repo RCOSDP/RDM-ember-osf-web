@@ -81,7 +81,7 @@ export default class RegistrationSchemaModel extends OsfModel {
         return this.localizeText(this.schema.ui && this.schema.ui.label) || this.name;
     }
 
-    @computed('schema.ui.description', 'schema.description')
+    @computed('schema.{ui.description,description}')
     get localizedDescription(): string {
         return this.localizeText(this.schema.ui && this.schema.ui.description) || this.schema.description;
     }

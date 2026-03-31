@@ -44,7 +44,7 @@ function collectTagDefs(tags: any[] | undefined, tagDefs: { [id: string]: { info
     }
     for (const tag of tags) {
         if (typeof tag === 'object' && tag.id) {
-            tagDefs[tag.id] = { info: tag.info };
+            tagDefs[tag.id] = { info: tag.info }; // eslint-disable-line no-param-reassign
         }
     }
 }
@@ -77,7 +77,7 @@ export function resolveTags(
     });
 }
 
-export type TagDefs = { [id: string]: { info?: string } };
+export interface TagDefs { [id: string]: { info?: string }; }
 
 export function buildVisualItems(
     groups: SchemaBlockGroup[],
@@ -126,7 +126,7 @@ export function buildVisualItems(
     }
 
     for (const group of groups) {
-        const inputBlock = group.inputBlock;
+        const { inputBlock } = group;
         if (group.registrationResponseKey && group.registrationResponseKey.match(/^__responseKey_grdm-file:.+$/)) {
             root.push({ schemaBlockGroup: group });
             continue;
