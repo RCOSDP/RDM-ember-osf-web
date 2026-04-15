@@ -13,7 +13,7 @@ import { FlowableFormContext, resolveFlowableType } from '../component';
 import { FieldValueWithType, WorkflowTaskField, WorkflowTaskFieldOption } from '../types';
 import {
     extractArrayInput, extractExportTarget, extractFileMetadata, extractFileSelector, extractFileUploader,
-    extractProjectMetadata,
+    extractProjectMetadata, FilterClause,
 } from '../utils';
 
 function renderTemplateAsHtml(tmpl: string, value: Record<string, any>): ReturnType<typeof htmlSafe> {
@@ -444,6 +444,11 @@ export default class TaskFormField extends Component<TaskFormFieldArgs> {
         return placeholder ? placeholder.multiSelect : false;
     }
 
+    get projectMetadataFilters(): FilterClause[] {
+        const placeholder = this.projectMetadataPlaceholder;
+        return placeholder ? placeholder.filters : [];
+    }
+
     get fileMetadataPlaceholder() {
         return extractFileMetadata(this.args.field);
     }
@@ -459,6 +464,11 @@ export default class TaskFormField extends Component<TaskFormFieldArgs> {
     get fileMetadataMultiSelect(): boolean {
         const placeholder = this.fileMetadataPlaceholder;
         return placeholder ? placeholder.multiSelect : false;
+    }
+
+    get fileMetadataFilters(): FilterClause[] {
+        const placeholder = this.fileMetadataPlaceholder;
+        return placeholder ? placeholder.filters : [];
     }
 
     get isPassword(): boolean {

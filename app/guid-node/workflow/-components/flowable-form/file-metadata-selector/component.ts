@@ -16,6 +16,7 @@ import pathJoin from 'ember-osf-web/utils/path-join';
 
 import { toStringValue } from '../field/component';
 import { FieldValueWithType } from '../types';
+import { FilterClause, matchesMetadataFilters } from '../utils';
 
 const { OSF: { url: baseURL } } = config;
 
@@ -50,6 +51,7 @@ interface FileMetadataSelectorArgs {
     node: Node;
     schemaName: string;
     multiSelect: boolean;
+    filters: FilterClause[];
     value: FieldValueWithType | undefined;
     onChange: (valueWithType: FieldValueWithType) => void;
     onLoadingChange?: (isLoading: boolean) => void;
@@ -107,8 +109,7 @@ export default class FileMetadataSelector extends Component<FileMetadataSelector
 
         const pathSet = new Set<string>();
         this.metadataNodeProject.files.forEach((entry: FileEntry) => {
-            const item = entry.items.find(it => it.schema === this.schemaId);
-            if (item) {
+            if (this.matchingItem(entry)) {
                 let path = '';
                 const parts = entry.path.split('/');
                 parts.forEach((part, i) => {
@@ -134,7 +135,7 @@ export default class FileMetadataSelector extends Component<FileMetadataSelector
         // Create a map of file metadata by path
         const metadataMap: {[key: string]: { title: string | null; urlpath: string }} = {};
         this.metadataNodeProject.files.forEach((entry: FileEntry) => {
-            const item = entry.items.find(it => it.schema === this.schemaId);
+            const item = this.matchingItem(entry);
             if (item) {
                 const titleJa = item.data['grdm-file:title-ja'];
                 const titleEn = item.data['grdm-file:title-en'];
@@ -252,6 +253,14 @@ export default class FileMetadataSelector extends Component<FileMetadataSelector
     expandFolder(entry: FileMetadataEntry, expand: boolean): void {
         this.folderExpands[entry.path] = expand;
         this.folderExpands = { ...this.folderExpands };
+    }
+
+    private matchingItem(entry: FileEntry): MetadataItem | undefined {
+        const item = entry.items.find(it => it.schema === this.schemaId);
+        if (!item) {
+            return undefined;
+        }
+        return matchesMetadataFilters(item.data, this.args.filters) ? item : undefined;
     }
 
     private notifyFileSelected(path: string): void {

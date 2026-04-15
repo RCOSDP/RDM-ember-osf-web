@@ -15,6 +15,7 @@ import pathJoin from 'ember-osf-web/utils/path-join';
 
 import { toStringValue } from '../field/component';
 import { FieldValueWithType } from '../types';
+import { FilterClause, matchesMetadataFilters } from '../utils';
 
 const { OSF: { url: baseURL } } = config;
 
@@ -35,6 +36,7 @@ interface ProjectMetadataSelectorArgs {
     node: Node;
     schemaName: string;
     multiSelect: boolean;
+    filters: FilterClause[];
     value: FieldValueWithType | undefined;
     onChange: (valueWithType: FieldValueWithType) => void;
     onLoadingChange?: (isLoading: boolean) => void;
@@ -84,8 +86,14 @@ export default class ProjectMetadataSelector extends Component<ProjectMetadataSe
     }
 
     get allRecords() {
+        const matchingDrafts = this.draftRegistrations.filter(
+            draft => matchesMetadataFilters(draft.registrationMetadata, this.args.filters),
+        );
+        const matchingRegistrations = this.registrations.filter(
+            reg => matchesMetadataFilters(reg.registeredMeta, this.args.filters),
+        );
         const records = [
-            ...this.draftRegistrations.map(draft => ({
+            ...matchingDrafts.map(draft => ({
                 guid: draft.id,
                 title: getMetadataDisplayTitle(draft.registrationResponses, draft.title),
                 dateCreated: draft.datetimeInitiated,
@@ -93,7 +101,7 @@ export default class ProjectMetadataSelector extends Component<ProjectMetadataSe
                 isDraft: true,
                 url: pathJoin(baseURL, 'registries', 'drafts', draft.id, 'metadata'),
             })),
-            ...this.registrations.map(reg => ({
+            ...matchingRegistrations.map(reg => ({
                 guid: reg.id,
                 title: getMetadataDisplayTitle(reg.registrationResponses, reg.title),
                 dateCreated: reg.dateCreated,
