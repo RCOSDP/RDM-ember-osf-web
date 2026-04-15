@@ -1,6 +1,7 @@
 import Component from '@ember/component';
 import { action, computed } from '@ember/object';
 import { inject as service } from '@ember/service';
+import { htmlSafe } from '@ember/string';
 import { task } from 'ember-concurrency-decorators';
 import Cookies from 'ember-cookies/services/cookies';
 import { localClassNames } from 'ember-css-modules';
@@ -65,6 +66,33 @@ export default class MaintenanceBanner extends Component {
     get alertType(): string | undefined {
         const levelMap = ['info', 'warning', 'danger'];
         return this.maintenance && this.maintenance.level ? levelMap[this.maintenance.level - 1] : undefined;
+    }
+
+    @computed('maintenance.message')
+    get renderedMessage() {
+        const text = this.maintenance && this.maintenance.message ? this.maintenance.message : '';
+        if (!text) {
+            return htmlSafe('');
+        }
+
+        const escapeHTML = (str: string) => str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+
+        const urlRegex = /(https?:\/\/[^\s<>"]+)/g;
+
+        const result = text.split(urlRegex).map(part => {
+            if (part.match(urlRegex)) {
+                const safeUrl = escapeHTML(part);
+                return `<a href="${safeUrl}">${safeUrl}</a>`;
+            }
+            return escapeHTML(part);
+        }).join('');
+        const withBreaks = result.replace(/\n/g, '<br>');
+        return htmlSafe(withBreaks);
     }
 
     didReceiveAttrs(): void {
