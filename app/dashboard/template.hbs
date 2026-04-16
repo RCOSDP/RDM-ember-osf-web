@@ -19,7 +19,7 @@
     <div local-class='quickSearch'>
         <div class='container p-t-lg'>
             <div class='row m-t-lg {{if (or (gt this.nodes.length 9) this.loading) (local-class 'quick-search-contents')}}'>
-                <div class='col-md-10 col-md-offset-1 col-lg-8 col-lg-offset-2'>
+                <div class='col-md-8 col-md-offset-1 col-lg-10 col-lg-offset-1'>
                     <div class='row'>
                         <div class='col-xs-12'>
                             <h2 class='col-xs-9'>{{t 'dashboard.title'}}</h2>
@@ -59,7 +59,7 @@
                                             <p class='text-center f-w-lg'>{{t 'dashboard.quicksearch.other_links' htmlSafe=true useSearch=this.useSearch}}</p>
                                             <div local-class='quick-search-table'>
                                                 <div class='row m-t-md' local-class='node-col-headers'>
-                                                    <div class='col-sm-3 col-md-3'>
+                                                    <div class='col-sm-2 col-md-2'>
                                                         <div local-class='quick-search-col'>
                                                             <span>{{t 'general.title'}}</span>
                                                             <SortButton
@@ -75,7 +75,7 @@
                                                             <span>{{t 'general.contributors'}}</span>
                                                         </div>
                                                     </div>
-                                                    <div class='col-sm-3 col-md-3'>
+                                                    <div class='col-sm-2 col-md-2'>
                                                         <div local-class='quick-search-col'>
                                                             <span>{{t 'general.modified'}}</span>
                                                             <SortButton
@@ -94,6 +94,11 @@
                                                     <div class='col-sm-2 col-md-2'>
                                                         <div local-class='quick-search-col'>
                                                             <span>{{t 'general.quota_notice'}}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class='col-sm-2 col-md-2'>
+                                                        <div local-class='quick-search-col'>
+                                                            <span>{{t 'general.groups'}}</span>
                                                         </div>
                                                     </div>
                                                 </div>

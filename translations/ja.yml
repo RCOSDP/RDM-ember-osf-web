@@ -95,6 +95,7 @@ general:
         preprints: プレプリント
         registries: 登録
     other: Other
+    groups: グループ
 node_categories:
     analysis: 分析
     communication: コミュニケーション
@@ -710,6 +711,8 @@ list:
 contributor_list:
     x_more: '他{x}名'
     anonymous: 匿名のメンバー
+group_list:
+    x_more: '他{x}名'
 app_components:
     branded_navbar:
         my_osf_projects: 'My GakuNin RDM Projects'

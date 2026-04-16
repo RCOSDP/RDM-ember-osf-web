@@ -1,0 +1,23 @@
+{{#if this.node.isAnonymous}}
+    {{t 'group_list.anonymous'}}
+{{else}}
+    <InlineList
+        @items={{this.displayedGroups}}
+        @total={{this.totalGroups}}
+        @truncate={{this.truncateCount}}
+        as |list|
+    >
+        {{~#if list.item}}
+            {{~group-list/group
+                group=list.item
+                shouldShortenName=this.shouldTruncate
+            ~}}
+        {{else if list.remainingCount}}
+            {{#if this.isLoading }}
+                <LoadingIndicator @inline={{true}} @dark={{true}} />
+            {{else}}
+                {{t 'group_list.x_more' x=list.remainingCount}}
+            {{/if}}
+        {{/if~}}
+    </InlineList>
+{{/if}}

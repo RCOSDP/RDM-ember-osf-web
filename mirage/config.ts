@@ -89,6 +89,15 @@ export default function(this: Server) {
         defaultSortKey: 'index',
         onCreate: createBibliographicContributor,
     });
+    // Added handler for node map_core groups so adapters querying
+    // Returns an empty paginated response by default.
+    this.get('/nodes/:parentID/map_core/groups', () => ({
+        data: [],
+        meta: {
+            total: 0,
+            per_page: 10,
+        },
+    }));
 
     this.get('/nodes/:parentID/files', nodeFileProviderList); // Node file providers list
     this.get('/nodes/:parentID/files/:fileProviderId', nodeFilesListForProvider); // Node files list for file provider
