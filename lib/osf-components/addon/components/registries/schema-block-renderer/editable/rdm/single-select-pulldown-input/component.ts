@@ -20,6 +20,7 @@ export default class SingleSelectPulldownInput extends Component {
     // Required param
     optionBlocks!: SchemaBlock[];
     changeset!: ChangesetDef;
+    schemaBlock!: SchemaBlock;
 
     @alias('schemaBlock.registrationResponseKey')
     valuePath!: string;
@@ -33,6 +34,12 @@ export default class SingleSelectPulldownInput extends Component {
             'SchemaBlockRenderer::Editable::SingleSelectPulldownInput requires optionBlocks to render',
             Boolean(this.optionBlocks),
         );
+    }
+
+    @computed('schemaBlock.ui')
+    get allowFreetext(): boolean {
+        const { ui } = this.schemaBlock;
+        return Boolean(ui && ui.item && ui.item.freetext);
     }
 
     @computed('optionBlocks.[]', 'anotherOption')
@@ -58,7 +65,8 @@ export default class SingleSelectPulldownInput extends Component {
 
     @action
     onInputSearch(text: string) {
-        if (!this.optionBlocks.find(item => item.displayText === text || this.getLocalizedItemText(item) === text)) {
+        if (this.allowFreetext
+            && !this.optionBlocks.find(item => item.displayText === text || this.getLocalizedItemText(item) === text)) {
             this.set('anotherOption', text);
         }
         return true;
