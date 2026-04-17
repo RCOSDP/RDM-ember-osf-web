@@ -41,7 +41,8 @@ function isValidFieldValue(field: WorkflowTaskField, value: unknown): boolean {
     const type = field.type.toLowerCase();
     if (['dropdown', 'select', 'radio-buttons', 'radio'].includes(type)) {
         const options = field.options || [];
-        const validValues = options.map(getOptionValue).filter(v => v !== undefined && v !== null && v !== '');
+        const selectable = field.hasEmptyValue ? options.slice(1) : options;
+        const validValues = selectable.map(getOptionValue).filter(v => v !== undefined && v !== null && v !== '');
         if (validValues.length > 0 && !validValues.includes(String(value))) {
             return false;
         }

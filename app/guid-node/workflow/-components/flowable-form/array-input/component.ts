@@ -48,16 +48,16 @@ export default class ArrayInput extends Component<ArrayInputArgs> {
         if (this.isInitialized) {
             return;
         }
-        this.isInitialized = true;
-
         const existing = this.args.value;
-        if (existing && Array.isArray(existing.value)) {
-            const items = existing.value as Array<Record<string, unknown>>;
-            this.rows = items.map(item => ({
-                key: this.allocateKey(),
-                values: { ...item },
-            }));
+        if (!existing || !Array.isArray(existing.value)) {
+            return;
         }
+        this.isInitialized = true;
+        const items = existing.value as Array<Record<string, unknown>>;
+        this.rows = items.map(item => ({
+            key: this.allocateKey(),
+            values: { ...item },
+        }));
     }
 
     @action

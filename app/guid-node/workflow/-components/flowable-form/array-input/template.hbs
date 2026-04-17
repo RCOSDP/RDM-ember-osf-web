@@ -1,4 +1,4 @@
-<div local-class="ArrayInput" {{did-insert this.initialize}}>
+<div local-class="ArrayInput" {{did-insert this.initialize}} {{did-update this.initialize @value}}>
     {{#each this.rowForms as |entry|}}
         <div local-class="ArrayInput__row">
             <div local-class="ArrayInput__rowHeader">
