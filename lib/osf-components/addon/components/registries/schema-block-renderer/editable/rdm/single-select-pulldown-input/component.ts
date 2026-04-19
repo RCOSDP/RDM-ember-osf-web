@@ -54,8 +54,7 @@ export default class SingleSelectPulldownInput extends Component {
 
     @action
     onChange(option: string) {
-        const code = (option || '').trim();
-        const item = this.optionBlocks.find(b => code === b.displayText);
+        const item = this.optionBlocks.find(b => this.getLocalizedItemText(b) === option);
         const result = item ? item.displayText : option;
         this.changeset.set(this.valuePath, result);
         this.onMetadataInput();
@@ -73,11 +72,14 @@ export default class SingleSelectPulldownInput extends Component {
     }
 
     getLocalizedItemText(item: SchemaBlock) {
-        const text = item.helpText || item.displayText;
-        if (text === undefined) {
-            return item.displayText;
+        if (item.displayText && item.displayText.includes('|')) {
+            return this.getLocalizedText(item.displayText);
         }
-        return `${item.displayText}`;
+        if (!item.helpText) {
+            return `${item.displayText}`;
+        }
+        const label = this.getLocalizedText(item.helpText);
+        return `${label} | ${item.displayText}`;
     }
 
     getLocalizedText(text: string) {
