@@ -1,3 +1,5 @@
+import captureException from 'ember-osf-web/utils/capture-exception';
+
 const PREFIX = 'rdm-wizard:';
 const TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
@@ -31,8 +33,10 @@ export function saveDraft(
             savedAt: Date.now(),
         };
         localStorage.setItem(storageKey(taskId), JSON.stringify(draft));
-    } catch {
-        // localStorage unavailable or full — silently skip
+    } catch (error) {
+        captureException(error as Error, {
+            errorMessage: `Failed to save workflow draft for task ${taskId}`,
+        });
     }
 }
 
@@ -52,7 +56,10 @@ export function loadDraft(taskId: string, formKey: string): WizardDraft | null {
             return null;
         }
         return draft;
-    } catch {
+    } catch (error) {
+        captureException(error as Error, {
+            errorMessage: `Failed to load workflow draft for task ${taskId}`,
+        });
         return null;
     }
 }
@@ -60,8 +67,10 @@ export function loadDraft(taskId: string, formKey: string): WizardDraft | null {
 export function clearDraft(taskId: string): void {
     try {
         localStorage.removeItem(storageKey(taskId));
-    } catch {
-        // silently skip
+    } catch (error) {
+        captureException(error as Error, {
+            errorMessage: `Failed to clear workflow draft for task ${taskId}`,
+        });
     }
 }
 
@@ -81,11 +90,16 @@ export function collectExpiredDrafts(): void {
                         localStorage.removeItem(key);
                     }
                 }
-            } catch {
+            } catch (error) {
+                captureException(error as Error, {
+                    errorMessage: `Failed to inspect workflow draft ${key}`,
+                });
                 localStorage.removeItem(key!);
             }
         }
-    } catch {
-        // silently skip
+    } catch (error) {
+        captureException(error as Error, {
+            errorMessage: 'Failed to collect expired workflow drafts',
+        });
     }
 }
