@@ -285,6 +285,7 @@ export default class GuidNodeWorkflowController extends Controller {
             cancelled: this.intl.t('workflow.console.status.cancelled') as string,
         };
 
+        const tabFromHash = this.extractTabFromHash(hash);
         const hasStartHash = this.updateSelectionFromHash(hash);
         const taskToOpen = this.extractTaskFromHash(hash);
         this.refreshRuns();
@@ -295,7 +296,7 @@ export default class GuidNodeWorkflowController extends Controller {
                 if (task) {
                     this.openTask(task);
                 }
-            } else if (!hasStartHash) {
+            } else if (!tabFromHash && !hasStartHash) {
                 const hasAssignedTasks = this.tasksWithActions.some(task => task.canComplete);
                 if (hasAssignedTasks) {
                     this.activeTab = 'tasks';
@@ -309,6 +310,10 @@ export default class GuidNodeWorkflowController extends Controller {
             return false;
         }
         const params = new URLSearchParams(hash.replace(/^#/, ''));
+        const tabValue = params.get('tab');
+        if (tabValue === 'start' || tabValue === 'runs' || tabValue === 'tasks') {
+            this.activeTab = tabValue;
+        }
         const startValue = params.get('start');
         if (!startValue) {
             return false;
@@ -353,6 +358,19 @@ export default class GuidNodeWorkflowController extends Controller {
         return null;
     }
 
+    extractTabFromHash(hash?: string): 'start' | 'runs' | 'tasks' | null {
+        const candidate = hash !== undefined ? hash : window.location.hash;
+        if (!candidate) {
+            return null;
+        }
+        const params = new URLSearchParams(candidate.replace(/^#/, ''));
+        const value = params.get('tab');
+        if (value === 'start' || value === 'runs' || value === 'tasks') {
+            return value;
+        }
+        return null;
+    }
+
     formatDate(value?: string | null): string {
         if (!value) {
             return '';
@@ -373,12 +391,8 @@ export default class GuidNodeWorkflowController extends Controller {
         this.submitSuccess = null;
         this.startFormVariables = [];
         this.prefilledStartFormVariables = [];
-        if (value) {
-            window.location.hash = `start=${encodeURIComponent(value)}`;
-        } else {
-            const { pathname, search } = window.location;
-            window.history.replaceState(null, document.title, `${pathname}${search}`);
-        }
+        const { pathname, search } = window.location;
+        window.history.replaceState(null, document.title, `${pathname}${search}#${this.hashForTab('start', value)}`);
     }
 
     runStatusLabel(run: WorkflowRunSummary & { statusRaw?: unknown }): string {
@@ -398,11 +412,17 @@ export default class GuidNodeWorkflowController extends Controller {
     }
 
     @action
-    setActiveTab(tab: 'start' | 'runs' | 'tasks'): void {
+    setActiveTab(tab: 'start' | 'runs' | 'tasks', event?: Event): void {
+        if (event) {
+            event.preventDefault();
+        }
         if (this.activeTab === tab) {
             return;
         }
         this.activeTab = tab;
+        const { pathname, search } = window.location;
+        const hash = this.hashForTab(tab, this.selectedTemplateId);
+        window.history.replaceState(null, document.title, `${pathname}${search}#${hash}`);
         if (tab === 'runs' && !this.runsLoaded) {
             this.refreshRuns();
         }
@@ -805,6 +825,13 @@ export default class GuidNodeWorkflowController extends Controller {
             return this.intl.t('workflow.console.tasks.assignee.contributor') as string;
         }
         return assignee;
+    }
+
+    private hashForTab(tab: 'start' | 'runs' | 'tasks', selectedTemplateId: string): string {
+        if (tab === 'start' && selectedTemplateId) {
+            return `tab=start&start=${encodeURIComponent(selectedTemplateId)}`;
+        }
+        return `tab=${tab}`;
     }
 }
 
