@@ -17,7 +17,6 @@ export default class UiVisualItems extends Component {
     changeset?: any;
     isTopLevel: boolean = false;
     circleMarker = '\u25CB';
-    infoMark = '\u24D8';
 
     @action
     preventLabelFocus(event: Event) {

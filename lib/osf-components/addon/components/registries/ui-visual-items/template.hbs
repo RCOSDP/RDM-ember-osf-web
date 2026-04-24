@@ -16,7 +16,7 @@
                     {{/each}}
                     {{#if item.uiGroup.localizedInfo}}
                         <span local-class='InfoMark' tabindex='-1' {{on 'click' this.preventLabelFocus}}>
-                            {{this.infoMark}}
+                            <FaIcon @icon='info-circle' />
                             <BsPopover @triggerEvents={{array 'focus'}}>
                                 {{item.uiGroup.localizedInfo}}
                             </BsPopover>

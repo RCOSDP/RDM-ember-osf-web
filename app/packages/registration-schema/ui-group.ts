@@ -1,3 +1,5 @@
+import { htmlSafe } from '@ember/template';
+
 import { SchemaBlock, SchemaBlockGroup } from 'ember-osf-web/packages/registration-schema';
 
 // TODO: condition evaluation is not implemented on the Ember side.
@@ -17,7 +19,7 @@ function resolveUI(ui: SchemaBlock['ui']): Record<string, any> | undefined {
 export interface ResolvedTag {
     id: string;
     localizedText: string;
-    info?: string;
+    info?: ReturnType<typeof htmlSafe>;
 }
 
 export interface UiGroupDef {
@@ -33,7 +35,11 @@ export interface UiGroupDef {
 
 export interface VisualItem {
     schemaBlockGroup?: SchemaBlockGroup;
-    uiGroup?: UiGroupDef & { localizedTitle?: string; localizedInfo?: string; resolvedTags?: ResolvedTag[] };
+    uiGroup?: UiGroupDef & {
+        localizedTitle?: string;
+        localizedInfo?: ReturnType<typeof htmlSafe>;
+        resolvedTags?: ResolvedTag[];
+    };
     children?: VisualItem[];
     responseKeys?: string[];
 }
@@ -62,7 +68,7 @@ export function resolveTags(
             return {
                 id: tag.id,
                 localizedText: localizeText(tag.id),
-                info: tag.info ? localizeText(tag.info) : undefined,
+                info: tag.info ? htmlSafe(localizeText(tag.info)) : undefined,
             };
         }
         const def = tagDefs[tag];
@@ -72,7 +78,7 @@ export function resolveTags(
         return {
             id: tag,
             localizedText: localizeText(tag),
-            info: def.info ? localizeText(def.info) : undefined,
+            info: def.info ? htmlSafe(localizeText(def.info)) : undefined,
         };
     });
 }
@@ -111,7 +117,7 @@ export function buildVisualItems(
             uiGroup: {
                 ...def,
                 localizedTitle: def.title ? localizeText(def.title) : undefined,
-                localizedInfo: def.info ? localizeText(def.info) : undefined,
+                localizedInfo: def.info ? htmlSafe(localizeText(def.info)) : undefined,
                 resolvedTags: resolveTags(def.tags, tagDefs, localizeText),
             },
             children: [],

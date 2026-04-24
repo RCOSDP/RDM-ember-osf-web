@@ -8,7 +8,6 @@
 
 .UiGroupHeading {
     font-weight: bold;
-    font-size: 1.1em;
     margin: 0 0 5px;
 
     + :global(label),
@@ -20,7 +19,7 @@
 .InfoMark {
     cursor: pointer;
     margin-left: 6px;
-    color: #5bc0de;
+    color: #3779b3;
 }
 
 .TagBadge {

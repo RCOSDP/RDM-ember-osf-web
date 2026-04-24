@@ -2,6 +2,7 @@ import { tagName } from '@ember-decorators/component';
 import Component from '@ember/component';
 import { action, computed } from '@ember/object';
 import { inject as service } from '@ember/service';
+import { htmlSafe } from '@ember/template';
 
 import Intl from 'ember-intl/services/intl';
 import { layout } from 'ember-osf-web/decorators/component';
@@ -26,7 +27,6 @@ export default class LabelContent extends Component {
     // Private property
     shouldShowExample = false;
     circleMarker = '\u25CB';
-    infoMark = '\u24D8';
 
     @computed('inputBlockUI')
     get displayTextOverride(): string | undefined {
@@ -39,9 +39,9 @@ export default class LabelContent extends Component {
     }
 
     @computed('inputBlockUI')
-    get itemInfo(): string | undefined {
+    get itemInfo(): ReturnType<typeof htmlSafe> | undefined {
         const info = this.inputBlockUI && this.inputBlockUI.item && this.inputBlockUI.item.info;
-        return info ? this.getLocalizedText(info) : undefined;
+        return info ? htmlSafe(this.getLocalizedText(info)) : undefined;
     }
 
     @computed('inputBlockUI', 'tagDefs')
