@@ -8,7 +8,11 @@ import GuidNodeWorkflowController, {
     normalizeTemplates,
     WorkflowTemplate,
 } from 'ember-osf-web/guid-node/workflow/controller';
-import { WorkflowActivationApiResponse } from 'ember-osf-web/guid-node/workflow/types';
+import {
+    PendingTemplate,
+    WorkflowActivationApiResponse,
+    WorkflowTemplateApiResponse,
+} from 'ember-osf-web/guid-node/workflow/types';
 import Node from 'ember-osf-web/models/node';
 import { GuidRouteModel } from 'ember-osf-web/resolve-guid/guid-route';
 import CurrentUser from 'ember-osf-web/services/current-user';
@@ -44,8 +48,21 @@ function extractErrorMessage(error: unknown): string {
 interface RouteModel {
     node: Node;
     templates: WorkflowTemplate[];
+    pendingTemplates: PendingTemplate[];
+    providesTemplates: boolean;
     apiBaseUrl: string;
     templatesError?: string | null;
+}
+
+function buildDisplayLabel(t: WorkflowTemplateApiResponse): string {
+    const short = t.label || t.definition_name || t.definition_key || t.definition_id || t.id;
+    return !t.is_local && t.node_title ? `${short} [${t.node_title}]` : short;
+}
+
+function extractPendingTemplates(templates: WorkflowTemplateApiResponse[]): PendingTemplate[] {
+    return templates
+        .filter(t => t.auto_activate && !t.activation_id && t.is_effectively_active)
+        .map(t => ({ id: String(t.id), displayLabel: buildDisplayLabel(t) }));
 }
 
 export default class GuidNodeWorkflowRoute extends Route {
@@ -73,14 +90,24 @@ export default class GuidNodeWorkflowRoute extends Route {
         const apiBaseUrl = buildProjectWorkflowBase(guid);
 
         let templates: WorkflowTemplate[] = [];
+        let pendingTemplates: PendingTemplate[] = [];
+        let providesTemplates = false;
         let templatesError: string | null = null;
 
         try {
-            const response: { data: WorkflowActivationApiResponse[] } = await this.currentUser.authenticatedAJAX({
-                url: `${apiBaseUrl}activations/`,
-                type: 'GET',
-            });
-            templates = normalizeTemplates(response.data);
+            const [activationsResponse, templatesResponse] = await Promise.all([
+                this.currentUser.authenticatedAJAX({
+                    url: `${apiBaseUrl}activations/`,
+                    type: 'GET',
+                }) as Promise<{ data: WorkflowActivationApiResponse[] }>,
+                this.currentUser.authenticatedAJAX({
+                    url: `${apiBaseUrl}templates/`,
+                    type: 'GET',
+                }) as Promise<{ data: WorkflowTemplateApiResponse[] }>,
+            ]);
+            templates = normalizeTemplates(activationsResponse.data);
+            pendingTemplates = extractPendingTemplates(templatesResponse.data);
+            providesTemplates = templatesResponse.data.some(t => t.is_local);
         } catch (error) {
             templatesError = extractErrorMessage(error);
         }
@@ -88,6 +115,8 @@ export default class GuidNodeWorkflowRoute extends Route {
         return {
             node,
             templates,
+            pendingTemplates,
+            providesTemplates,
             apiBaseUrl,
             templatesError,
         };
@@ -100,6 +129,8 @@ export default class GuidNodeWorkflowRoute extends Route {
             {
                 node: model.node,
                 templates: model.templates,
+                pendingTemplates: model.pendingTemplates,
+                providesTemplates: model.providesTemplates,
                 apiBaseUrl: model.apiBaseUrl,
                 templatesError: model.templatesError,
             },

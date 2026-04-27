@@ -645,7 +645,7 @@ node:
     metadata:
         new_report_modal:
             title: メタデータ様式を選択
-            info: 'デフォルトは「公的資金による研究データのメタデータ登録」です。<ul><li>「ムーンショット目標２未病データベース-メタデータ」は該当する人のみ選択してください</li></ul>新規に作成したいプロジェクトメタデータの様式を以下から選択してください。<ul><li>メタデータ作成では、様式で定義された各項目を入力することができます。</li><li>メタデータ作成では、このプロジェクトに含まれるファイルのメタデータを登録することができます。</li><li>メタデータ作成から報告書様式に準拠したファイルをダウンロードし、報告書等の提出に利用することができます。</li></ul>'
+            info: 'デフォルトは「研究成果（公的資金対応）のメタデータ登録」です。<ul><li>「ムーンショット目標２未病データベース-メタデータ」は該当する人のみ選択してください</li></ul>新規に作成したいプロジェクトメタデータの様式を以下から選択してください。<ul><li>メタデータ作成では、様式で定義された各項目を入力することができます。</li><li>メタデータ作成では、このプロジェクトに含まれるファイルのメタデータを登録することができます。</li><li>メタデータ作成から報告書様式に準拠したファイルをダウンロードし、報告書等の提出に利用することができます。</li></ul>'
             note: ＊今後、対応する事業や機関の増加に合わせて、メタデータの様式は随時追加されていきます。
             create: メタデータを作成
         page_title: '{nodeTitle} メタデータ'
@@ -1046,7 +1046,9 @@ registries:
                 toggle_dropdown: 'Toggle navigation dropdown'
             register: 登録
             submit_error: 'Unable to create a registration.'
-            weko_id: '<strong>登録済</strong>:未病DBカタログ<br>ID:{weko_id}'
+            weko_id:
+                mebyo: '<strong>登録済</strong>:未病DBカタログ<br>ID:{weko_id}'
+                default: '<strong>登録済</strong>:JAIRO Cloud<br>ID:{weko_id}'
     index:
         lead: '<span class="f-w-lg">オープン</span> レジストリネットワーク'
         see_example: 例を見る
@@ -1388,7 +1390,10 @@ osf-components:
         form_type: '様式:'
         started: '開始日:'
         last_updated: '最終更新日:'
-        weko_id : '登録済：未病DBカタログ (ID:{weko_id})'
+        workflow_submitted: 申請済み
+        weko_id:
+            mebyo: '登録済：未病DBカタログ (ID:{weko_id})'
+            default: '登録済：JAIRO Cloud (ID:{weko_id})'
         review: 内容確認
         delete_draft_confirm: このプロジェクトメタデータを削除してもよろしいですか？
     copyable-text:
@@ -1915,7 +1920,7 @@ binderhub:
 metadata:
     file-metadata-input:
         no_metadata: 'ファイルはありません'
-        no_metadata_editable: 'ファイルメタデータは登録されていません。プロジェクトページでファイルのメタデータを編集し、この下書きに登録することができます:'
+        no_metadata_editable: 'ファイルメタデータは登録されていません。プロジェクトページでファイルのメタデータを編集し、このメタデータに登録することができます:'
         columns:
             title: 'タイトル'
             path: 'パス'
@@ -1967,6 +1972,10 @@ workflow:
     console:
         heading: ワークフローコンソール
         description: このプロジェクトに登録されたワークフローを起動し、実行を管理します。
+        pendingTemplates:
+            heading: 利用可能なワークフロー
+            activate: 有効化
+            dismiss: 非表示にする
         startSectionTitle: ワークフローを開始
         workflowLabel: ワークフロー
         selectPrompt: ワークフローを選択してください…
@@ -1988,6 +1997,7 @@ workflow:
         startSuccess: ワークフローを開始しました。
         startFailed: ワークフローを開始できませんでした。
         refresh: 更新
+        displayCount: '表示件数:'
         close: 閉じる
         tab:
             start: 実行
@@ -2043,6 +2053,7 @@ workflow:
                 assignee: 担当
                 created: 作成
                 due: 期限
+                completed: 完了
                 status: 状態
                 actions: 操作
             statuses:
@@ -2075,6 +2086,10 @@ workflow:
                 next: 次へ
                 progressTitle: 進捗状況
                 submitting: 送信中...
+                wizard:
+                    back: 戻る
+                    next: 次へ
+
                 projectMetadataSelector:
                     loading: メタデータレコードを読み込み中...
                     refresh: 更新
@@ -2088,4 +2103,7 @@ workflow:
                     refresh: 更新
                     noRecordsPrefix: ファイルメタデータは登録されていません。プロジェクトページでファイルのメタデータを編集し、このフォームに登録することができます
                     path: パス
-                    manager: 管理者
+                exportTarget:
+                    loading: エクスポート先を読み込み中...
+                arrayInput:
+                    add: 追加

@@ -55,4 +55,20 @@ export interface SchemaBlock {
     retrievalVersion?: string;
     readonly?: boolean;
     rowAdditionCaption?: string;
+    suggestion?: string;
+    ui?: {
+        group?: string | {
+            id: string; title?: string; marker?: string; bar?: boolean;
+            tags?: Array<string | { id: string; info?: string }>;
+            help?: string; info?: string;
+            parent?: string | { id: string; title?: string };
+        };
+        sub_label?: string; // eslint-disable-line camelcase
+        item?: {
+            marker?: string; placeholder?: string; width?: string;
+            widget?: string; enabled_if?: object; // eslint-disable-line camelcase
+            info?: string; tags?: Array<string | { id: string; info?: string }>;
+            freetext?: boolean;
+        };
+    };
 }

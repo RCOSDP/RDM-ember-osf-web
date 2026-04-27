@@ -24,9 +24,16 @@
     <section local-class='DraftRegistrationCard__body' data-test-draft-registration-card-body>
         {{#if this.draftRegistration}}
             <small>
+                {{#if this.workflowRunId}}
+                    <p data-test-workflow-run-id>
+                        <a href={{this.workflowUrl}}>
+                            <strong>{{t 'osf-components.draft-registration-card.workflow_submitted'}}</strong>
+                        </a>
+                    </p>
+                {{/if}}
                 {{#if this.wekoItemId}}
                     <p data-test-weko-item-id>
-                        <strong>{{t 'osf-components.draft-registration-card.weko_id' weko_id=this.wekoItemId}}</strong>
+                        <strong>{{t (concat 'osf-components.draft-registration-card.weko_id.' this.wekoLabelKey) weko_id=this.wekoItemId}}</strong>
                     </p>
                 {{/if}}
                 <p data-test-initiated-by>
@@ -35,7 +42,7 @@
                 </p>
                 <p data-test-form-type>
                     {{t 'osf-components.draft-registration-card.form_type'}}
-                    {{this.draftRegistration.registrationSchema.name}}
+                    {{this.draftRegistration.registrationSchema.localizedName}}
                 </p>
                 <p data-test-time-initiated>
                     {{t 'osf-components.draft-registration-card.started'}}

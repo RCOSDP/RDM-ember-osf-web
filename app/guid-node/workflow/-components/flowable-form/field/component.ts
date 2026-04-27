@@ -2,11 +2,27 @@ import { action } from '@ember/object';
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 
+import { htmlSafe } from '@ember/template';
+import { fetchSuggestions, SuggestionResult } from 'ember-osf-web/utils/suggestion-api';
+
 import { WorkflowVariable } from '../../../types';
 import { parseProgressSteps, ProgressStep } from '../../progress-sidebar/utils';
-import { resolveFlowableType } from '../component';
+import { evaluateTemplate, hasTemplateDirectives } from '../../wizard-form/template-evaluator';
+import { FieldHint, SuggestionConfig } from '../../wizard-form/types';
+import { FlowableFormContext, resolveFlowableType } from '../component';
 import { FieldValueWithType, WorkflowTaskField, WorkflowTaskFieldOption } from '../types';
-import { extractFileMetadata, extractProjectMetadata } from '../utils';
+import {
+    extractArrayInput, extractExportTarget, extractFileMetadata, extractFileSelector, extractFileUploader,
+    extractProjectMetadata, FilterClause,
+} from '../utils';
+
+function renderTemplateAsHtml(tmpl: string, value: Record<string, any>): ReturnType<typeof htmlSafe> {
+    const rendered = tmpl.replace(/\{\{(\w+)\}\}/g, (_: string, field: string) => {
+        const v = value[field];
+        return v != null ? String(v) : '';
+    });
+    return htmlSafe(rendered);
+}
 
 function getOptionValue(option: WorkflowTaskFieldOption): string | undefined {
     return (option.id !== undefined && option.id !== null) ? option.id : option.name;
@@ -25,7 +41,8 @@ function isValidFieldValue(field: WorkflowTaskField, value: unknown): boolean {
     const type = field.type.toLowerCase();
     if (['dropdown', 'select', 'radio-buttons', 'radio'].includes(type)) {
         const options = field.options || [];
-        const validValues = options.map(getOptionValue).filter(v => v !== undefined && v !== null && v !== '');
+        const selectable = field.hasEmptyValue ? options.slice(1) : options;
+        const validValues = selectable.map(getOptionValue).filter(v => v !== undefined && v !== null && v !== '');
         if (validValues.length > 0 && !validValues.includes(String(value))) {
             return false;
         }
@@ -62,11 +79,123 @@ interface TaskFormFieldArgs {
     fieldValues: Record<string, FieldValueWithType>;
     variables: WorkflowVariable[];
     node?: any;
+    fieldHints?: Record<string, FieldHint>;
+    formContext?: FlowableFormContext;
+    fieldContext?: Record<string, unknown>;
     onChange: (fieldId: string, valueWithType: FieldValueWithType) => void;
+    onLoadingChange?: (fieldId: string, isLoading: boolean) => void;
+    onRegister?: (fieldId: string, handle: { setValue(v: FieldValueWithType): void }) => void;
+    onUnregister?: (fieldId: string) => void;
 }
 
 export default class TaskFormField extends Component<TaskFormFieldArgs> {
     @tracked updatedValue: FieldValueWithType | null = null;
+    @tracked suggestionResults: SuggestionResult[] = [];
+    @tracked showSuggestions = false;
+
+    private searchTimer: ReturnType<typeof setTimeout> | null = null;
+
+    // --- Field registry (for autofill via view layer) ---
+
+    setValue(valueWithType: FieldValueWithType): void {
+        this.updatedValue = valueWithType;
+        this.args.onChange(this.args.field.id, valueWithType);
+    }
+
+    @action
+    onFieldInsert(): void {
+        if (this.args.onRegister) { this.args.onRegister(this.args.field.id, this); }
+    }
+
+    @action
+    onFieldDestroy(): void {
+        if (this.args.onUnregister) { this.args.onUnregister(this.args.field.id); }
+    }
+
+    // --- Hint accessors ---
+
+    get hint(): FieldHint | undefined {
+        return this.args.fieldHints && this.args.fieldHints[this.args.field.id];
+    }
+
+    get suggestionConfigs(): SuggestionConfig[] | null {
+        const configs = this.hint && this.hint.suggestion;
+        if (!configs || !configs.length) {
+            return null;
+        }
+        return configs.filter((s: SuggestionConfig) => Boolean(s.template));
+    }
+
+    get hasSuggestion(): boolean {
+        return this.suggestionConfigs !== null && this.suggestionConfigs.length > 0;
+    }
+
+    get widthStyle(): string | undefined {
+        const width = this.hint && this.hint.ui && this.hint.ui.width;
+        if (width === 'narrow') {
+            return 'max-width: 25%;';
+        }
+        if (width === 'half') {
+            return 'max-width: 50%;';
+        }
+        return undefined;
+    }
+
+    get isFreetext(): boolean {
+        return Boolean(this.hint && this.hint.ui && this.hint.ui.freetext);
+    }
+
+    // --- Suggestion / typeahead ---
+
+    get suggestionItems(): Array<{ key: string; html: ReturnType<typeof htmlSafe> }> {
+        const configs = this.suggestionConfigs!;
+        return this.suggestionResults.map((result, idx) => {
+            const config = configs.find(c => c.key === result.key)!;
+            return {
+                key: String(idx),
+                html: renderTemplateAsHtml(config.template!, result.value),
+            };
+        });
+    }
+
+    @action
+    onTypeaheadInput(event: Event): void {
+        const text = (event.target as HTMLInputElement).value;
+        this.setValue({
+            value: text === '' ? null : text,
+            type: 'string',
+        });
+        if (this.searchTimer) {
+            clearTimeout(this.searchTimer);
+        }
+        this.searchTimer = setTimeout(() => this.doSearch(text), 300);
+    }
+
+    @action
+    onTypeaheadBlur(): void {
+        setTimeout(() => { this.showSuggestions = false; }, 200);
+    }
+
+    @action
+    onSuggestionSelect(key: string): void {
+        const idx = parseInt(key, 10);
+        const result = this.suggestionResults[idx];
+        const configs = this.suggestionConfigs!;
+        const config = configs.find(c => c.key === result.key)!;
+
+        const valueField = config.valueField || config.key.split(':')[1];
+        this.setValue({
+            value: String(result.value[valueField]),
+            type: 'string',
+        });
+        this.showSuggestions = false;
+
+        if (config.autofill) {
+            this.applyAutofill(config.autofill, result.value);
+        }
+    }
+
+    // --- Standard field handlers ---
 
     @action
     handleChange(event: Event): void {
@@ -118,17 +247,58 @@ export default class TaskFormField extends Component<TaskFormFieldArgs> {
         this.args.onChange(this.args.field.id, valueWithType);
     }
 
-    get displayValue(): unknown {
-        return this.updatedValue !== null ? this.updatedValue.value : this.currentValue;
+    @action
+    handleFileSelectorChange(valueWithType: FieldValueWithType): void {
+        this.updatedValue = valueWithType;
+        this.args.onChange(this.args.field.id, valueWithType);
     }
 
-    get hasError(): boolean {
+    @action
+    handleFileUploaderChange(valueWithType: FieldValueWithType): void {
+        this.updatedValue = valueWithType;
+        this.args.onChange(this.args.field.id, valueWithType);
+    }
+
+    @action
+    handleExportTargetChange(valueWithType: FieldValueWithType): void {
+        this.updatedValue = valueWithType;
+        this.args.onChange(this.args.field.id, valueWithType);
+    }
+
+    @action
+    handleLoadingChange(isLoading: boolean): void {
+        if (this.args.onLoadingChange) { this.args.onLoadingChange(this.args.field.id, isLoading); }
+    }
+
+    @action
+    handleArrayInputChange(valueWithType: FieldValueWithType): void {
+        this.updatedValue = valueWithType;
+        this.args.onChange(this.args.field.id, valueWithType);
+    }
+
+    get displayValue(): unknown {
+        if (this.updatedValue !== null) {
+            return this.updatedValue.value;
+        }
+        const current = this.currentValue;
+        return current ? current.value : null;
+    }
+
+    get hasRequiredError(): boolean {
         if (!this.isRequired) {
             return false;
         }
         const val = this.displayValue;
-        const isValid = isValidFieldValue(this.args.field, val);
-        return !isValid;
+        return !isValidFieldValue(this.args.field, val);
+    }
+
+    get hasCustomError(): boolean {
+        const current = this.updatedValue || this.currentValue;
+        return current !== undefined && current !== null && current.valid === false;
+    }
+
+    get hasError(): boolean {
+        return this.hasRequiredError || this.hasCustomError;
     }
     get type(): string {
         return this.args.field.type;
@@ -159,6 +329,9 @@ export default class TaskFormField extends Component<TaskFormFieldArgs> {
     }
 
     get stringValue(): string {
+        if (this.updatedValue !== null) {
+            return toStringValue(this.updatedValue);
+        }
         const current = this.currentValue;
         if (!current) {
             return '';
@@ -167,6 +340,9 @@ export default class TaskFormField extends Component<TaskFormFieldArgs> {
     }
 
     get booleanValue(): boolean {
+        if (this.updatedValue !== null) {
+            return toBooleanValue(this.updatedValue);
+        }
         const current = this.currentValue;
         if (!current) {
             return false;
@@ -198,10 +374,58 @@ export default class TaskFormField extends Component<TaskFormFieldArgs> {
     }
 
     get isTextarea(): boolean {
-        if (this.isProjectMetadataSelector) {
+        if (this.isProjectMetadataSelector || this.isArrayInput) {
+            return false;
+        }
+        if (this.isFileSelector || this.isFileUploader || this.isExportTarget) {
             return false;
         }
         return this.type === 'multi-line-text' || this.type === 'textarea';
+    }
+
+    get isFileSelector(): boolean {
+        return extractFileSelector(this.args.field);
+    }
+
+    get fileUploaderPlaceholder() {
+        return extractFileUploader(this.args.field);
+    }
+
+    get isFileUploader(): boolean {
+        return this.fileUploaderPlaceholder !== null;
+    }
+
+    get isExportTarget(): boolean {
+        return extractExportTarget(this.args.field);
+    }
+
+    get arrayInputPlaceholder() {
+        return extractArrayInput(this.args.field);
+    }
+
+    get isArrayInput(): boolean {
+        return this.arrayInputPlaceholder !== null;
+    }
+
+    get arrayInputFields() {
+        return this.arrayInputPlaceholder ? this.arrayInputPlaceholder.fields : [];
+    }
+
+    get arrayFieldHints(): Record<string, FieldHint> | undefined {
+        const allHints = this.args.fieldHints;
+        if (!allHints) {
+            return undefined;
+        }
+        const prefix = `${this.args.field.id}.`;
+        const subHints: Record<string, FieldHint> = {};
+        let found = false;
+        for (const [key, hint] of Object.entries(allHints)) {
+            if (key.startsWith(prefix)) {
+                subHints[key.substring(prefix.length)] = hint;
+                found = true;
+            }
+        }
+        return found ? subHints : undefined;
     }
 
     get projectMetadataPlaceholder() {
@@ -221,6 +445,11 @@ export default class TaskFormField extends Component<TaskFormFieldArgs> {
         return placeholder ? placeholder.multiSelect : false;
     }
 
+    get projectMetadataFilters(): FilterClause[] {
+        const placeholder = this.projectMetadataPlaceholder;
+        return placeholder ? placeholder.filters : [];
+    }
+
     get fileMetadataPlaceholder() {
         return extractFileMetadata(this.args.field);
     }
@@ -236,6 +465,11 @@ export default class TaskFormField extends Component<TaskFormFieldArgs> {
     get fileMetadataMultiSelect(): boolean {
         const placeholder = this.fileMetadataPlaceholder;
         return placeholder ? placeholder.multiSelect : false;
+    }
+
+    get fileMetadataFilters(): FilterClause[] {
+        const placeholder = this.fileMetadataPlaceholder;
+        return placeholder ? placeholder.filters : [];
     }
 
     get isPassword(): boolean {
@@ -299,7 +533,8 @@ export default class TaskFormField extends Component<TaskFormFieldArgs> {
         const field = this.args.field as unknown as { expression?: string };
         const expression = field.expression || '';
 
-        return expression.replace(/\$\{([^}]+)\}/g, (_match, varName) => { // tslint:disable-line:variable-name
+        // Step 1: ${...} (Flowable UEL) resolution
+        const uelResolved = expression.replace(/\$\{([^}]+)\}/g, (_, varName) => {
             const trimmed = varName.trim();
             const variable = this.args.variables.find(v => v.name === trimmed);
             if (variable) {
@@ -311,6 +546,18 @@ export default class TaskFormField extends Component<TaskFormFieldArgs> {
             }
             return '';
         });
+
+        // Step 2: {{ }} / {% %} template directives (client-side)
+        if (!hasTemplateDirectives(uelResolved)) {
+            return uelResolved;
+        }
+        // Build context from variables (tracked via currentPageVariables)
+        // rather than fieldContext (not tracked by Glimmer).
+        const ctx: Record<string, unknown> = {};
+        for (const v of this.args.variables) {
+            ctx[v.name] = v.value;
+        }
+        return evaluateTemplate(uelResolved, ctx);
     }
 
     get hyperlinkUrl(): string {
@@ -328,5 +575,35 @@ export default class TaskFormField extends Component<TaskFormFieldArgs> {
 
     get remainingExpressionText(): string {
         return this.parsedExpression.remainingText;
+    }
+
+    private applyAutofill(autofillMap: Record<string, string>, responseValue: Record<string, any>): void {
+        const formContext = this.args.formContext!;
+        const allHints = this.args.fieldHints || {};
+
+        for (const [targetFieldId, responseField] of Object.entries(autofillMap)) {
+            const rawValue = responseValue[responseField];
+            if (rawValue == null) {
+                continue;
+            }
+            let resolved = String(rawValue);
+            const targetHint = allHints[targetFieldId];
+            const targetOptionMap = targetHint && targetHint.ui && targetHint.ui.optionMap;
+            if (targetOptionMap && targetOptionMap[resolved]) {
+                resolved = targetOptionMap[resolved];
+            }
+            formContext.setFieldValue(targetFieldId, { value: resolved, type: 'string' });
+        }
+    }
+
+    private async doSearch(keyword: string): Promise<void> {
+        const { node } = this.args;
+        if (!node) {
+            return;
+        }
+        const keys = this.suggestionConfigs!.map(c => c.key);
+        const results = await fetchSuggestions(node.id, keys, keyword);
+        this.suggestionResults = results;
+        this.showSuggestions = results.length > 0;
     }
 }

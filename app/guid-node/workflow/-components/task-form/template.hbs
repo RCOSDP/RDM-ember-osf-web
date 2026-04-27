@@ -1,4 +1,14 @@
-{{#if this.hasFlowableForm}}
+{{#if this.hasWizardForm}}
+    <GuidNode::Workflow::-Components::WizardForm
+        @form={{@form}}
+        @variables={{@variables}}
+        @node={{@node}}
+        @taskId={{@taskId}}
+        @onChange={{@onChange}}
+        @onSubmit={{@onSubmit}}
+        @onNavigationChange={{@onWizardNavigationChange}}
+    />
+{{else if this.hasFlowableForm}}
     <GuidNode::Workflow::-Components::FlowableForm
         @form={{@form}}
         @variables={{@variables}}

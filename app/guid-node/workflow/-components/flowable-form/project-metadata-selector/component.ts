@@ -15,6 +15,7 @@ import pathJoin from 'ember-osf-web/utils/path-join';
 
 import { toStringValue } from '../field/component';
 import { FieldValueWithType } from '../types';
+import { FilterClause, matchesMetadataFilters } from '../utils';
 
 const { OSF: { url: baseURL } } = config;
 
@@ -35,8 +36,10 @@ interface ProjectMetadataSelectorArgs {
     node: Node;
     schemaName: string;
     multiSelect: boolean;
+    filters: FilterClause[];
     value: FieldValueWithType | undefined;
     onChange: (valueWithType: FieldValueWithType) => void;
+    onLoadingChange?: (isLoading: boolean) => void;
     disabled: boolean;
 }
 
@@ -83,8 +86,14 @@ export default class ProjectMetadataSelector extends Component<ProjectMetadataSe
     }
 
     get allRecords() {
+        const matchingDrafts = this.draftRegistrations.filter(
+            draft => matchesMetadataFilters(draft.registrationMetadata, this.args.filters),
+        );
+        const matchingRegistrations = this.registrations.filter(
+            reg => matchesMetadataFilters(reg.registeredMeta, this.args.filters),
+        );
         const records = [
-            ...this.draftRegistrations.map(draft => ({
+            ...matchingDrafts.map(draft => ({
                 guid: draft.id,
                 title: getMetadataDisplayTitle(draft.registrationResponses, draft.title),
                 dateCreated: draft.datetimeInitiated,
@@ -92,7 +101,7 @@ export default class ProjectMetadataSelector extends Component<ProjectMetadataSe
                 isDraft: true,
                 url: pathJoin(baseURL, 'registries', 'drafts', draft.id, 'metadata'),
             })),
-            ...this.registrations.map(reg => ({
+            ...matchingRegistrations.map(reg => ({
                 guid: reg.id,
                 title: getMetadataDisplayTitle(reg.registrationResponses, reg.title),
                 dateCreated: reg.dateCreated,
@@ -113,7 +122,10 @@ export default class ProjectMetadataSelector extends Component<ProjectMetadataSe
     initialize() {
         if (!this.isInitialized) {
             this.isInitialized = true;
-            this.loadMetadataRecords.perform();
+            if (this.args.onLoadingChange) { this.args.onLoadingChange(true); }
+            this.loadMetadataRecords.perform().finally(() => {
+                if (this.args.onLoadingChange) { this.args.onLoadingChange(false); }
+            });
         }
     }
 
@@ -122,21 +134,15 @@ export default class ProjectMetadataSelector extends Component<ProjectMetadataSe
         if (!this.args.value) {
             return;
         }
+        // Restore UI selection state from parent value.
+        // No need to notify back — parent already holds the value.
+        const guids = this.extractGuidsFromValue(this.args.value);
         if (this.isMultiSelect) {
-            if (this.selectedGuids.length > 0) {
-                return;
-            }
-            const guids = this.extractGuidsFromValue(this.args.value);
-            if (guids.length > 0) {
+            if (this.selectedGuids.length === 0 && guids.length > 0) {
                 this.selectedGuids = guids;
-                this.notifyRecordsSelected(guids);
             }
-        } else if (!this.selectedGuid) {
-            const guid = this.extractGuidsFromValue(this.args.value)[0];
-            if (guid) {
-                this.selectedGuid = guid;
-                this.notifyRecordSelected(guid);
-            }
+        } else if (!this.selectedGuid && guids[0]) {
+            [this.selectedGuid] = guids;
         }
     }
 

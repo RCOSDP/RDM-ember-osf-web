@@ -5,21 +5,54 @@
         @shouldShowMessages={{@shouldShowMessages}}
         ...attributes as |form|
     >
-        <form.text
-            data-test-text-input
-            local-class='schema-block-input'
-            @uniqueID={{@uniqueID}}
-            @valuePath={{@schemaBlock.registrationResponseKey}}
-            @onKeyUp={{@onInput}}
-            @retrievalTitle={{@schemaBlock.retrievalTitle}}
-            @retrievalDate={{@schemaBlock.retrievalDate}}
-            @retrievalVersion={{@schemaBlock.retrievalVersion}}
-            @readonly={{@schemaBlock.readonly}}
-            @title={{@draftManager.node.title}}
-            @nodeId={{@node.id}}
-            @datetimeInitiated={{@draftManager.draftRegistration.datetimeInitiated}}
-            @datetimeUpdated={{@draftManager.draftRegistration.datetimeUpdated}}
-            @placeholder=' '
-        />
+        {{#if this.hasSuggestion}}
+            <div local-class='typeahead-container'>
+                <input
+                    data-test-text-input
+                    type='text'
+                    class='form-control'
+                    value={{or (get @changeset this.valuePath) ''}}
+                    oninput={{action this.onTypeaheadInput}}
+                    onblur={{action this.onTypeaheadBlur}}
+                    placeholder=' '
+                >
+                {{#if this.showSuggestions}}
+                    <ul local-class='typeahead-dropdown'>
+                        {{#each this.suggestionItems as |item|}}
+                            {{!-- template-lint-disable no-invalid-interactive --}}
+                            <li
+                                local-class='typeahead-item'
+                                onmousedown={{action this.onSuggestionSelect item.key}}
+                            >
+                                {{!-- template-lint-disable no-triple-curlies --}}
+                                {{{item.html}}}
+                            </li>
+                        {{/each}}
+                    </ul>
+                {{/if}}
+            </div>
+            <ValidationErrors
+                local-class='ValidationErrors'
+                @changeset={{@changeset}}
+                @key={{@schemaBlock.registrationResponseKey}}
+            />
+        {{else}}
+            <form.text
+                data-test-text-input
+                local-class='schema-block-input'
+                @uniqueID={{@uniqueID}}
+                @valuePath={{@schemaBlock.registrationResponseKey}}
+                @onKeyUp={{@onInput}}
+                @retrievalTitle={{@schemaBlock.retrievalTitle}}
+                @retrievalDate={{@schemaBlock.retrievalDate}}
+                @retrievalVersion={{@schemaBlock.retrievalVersion}}
+                @readonly={{@schemaBlock.readonly}}
+                @title={{@draftManager.node.title}}
+                @nodeId={{@node.id}}
+                @datetimeInitiated={{@draftManager.draftRegistration.datetimeInitiated}}
+                @datetimeUpdated={{@draftManager.draftRegistration.datetimeUpdated}}
+                @placeholder=' '
+            />
+        {{/if}}
     </FormControls>
 </Registries::SchemaBlockRenderer::Editable::Base>

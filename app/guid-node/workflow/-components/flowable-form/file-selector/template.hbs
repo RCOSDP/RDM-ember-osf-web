@@ -1,0 +1,12 @@
+<div {{did-insert this.initialize}}>
+    <GuidNode::Package::-Components::Files::Manager
+        @node={{@node}}
+        @canEdit={{false}}
+        as |filesManager|
+    >
+        <GuidNode::Package::-Components::Files::Browse
+            @filesManager={{filesManager}}
+            @selectionManager={{this.selectionManager}}
+        />
+    </GuidNode::Package::-Components::Files::Manager>
+</div>

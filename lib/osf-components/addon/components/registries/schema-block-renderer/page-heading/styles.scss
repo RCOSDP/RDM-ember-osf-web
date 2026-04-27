@@ -2,7 +2,9 @@
     composes: Heading from '../styles';
 
     color: $color-text-gray-blue;
+    margin-bottom: 16px;
 }
+
 
 .PageHeading_helper {
     margin-bottom: 0;

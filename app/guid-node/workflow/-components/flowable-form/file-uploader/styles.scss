@@ -1,0 +1,7 @@
+.file-uploader {
+    :global([data-test-share-dialog-button]),
+    :global([data-test-view-button]),
+    :global([data-test-move-button]) {
+        display: none;
+    }
+}

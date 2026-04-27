@@ -54,6 +54,12 @@ export default class SchemaBlockGroupRenderer extends Component {
             );
     }
 
+    @computed('schemaBlockGroup.inputBlock.ui')
+    get inputBlockUI() {
+        const { inputBlock } = this.schemaBlockGroup;
+        return inputBlock && inputBlock.ui;
+    }
+
     @computed('schemaBlockGroup.groupType')
     get isFieldsetGroup(): boolean {
         return (

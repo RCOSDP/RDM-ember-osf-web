@@ -1,0 +1,49 @@
+{{#each @items as |item|}}
+    {{#if item.uiGroup}}
+        <div local-class='UiGroup'>
+            {{#if item.uiGroup.localizedTitle}}
+                <div local-class='UiGroupHeading'>
+                    <strong>{{#if (eq item.uiGroup.marker 'circle')}}{{this.circleMarker}} {{/if}}{{item.uiGroup.localizedTitle}}</strong>
+                    {{#each item.uiGroup.resolvedTags as |tag|}}
+                        <span tabindex='-1' {{on 'click' this.preventLabelFocus}}>
+                            <span local-class='TagBadge'>{{tag.localizedText}}</span>
+                            {{#if tag.info}}
+                                <BsPopover @triggerEvents={{array 'focus'}}>
+                                    {{tag.info}}
+                                </BsPopover>
+                            {{/if}}
+                        </span>
+                    {{/each}}
+                    {{#if item.uiGroup.localizedInfo}}
+                        <span local-class='InfoMark' tabindex='-1' {{on 'click' this.preventLabelFocus}}>
+                            <FaIcon @icon='info-circle' />
+                            <BsPopover @triggerEvents={{array 'focus'}}>
+                                {{item.uiGroup.localizedInfo}}
+                            </BsPopover>
+                        </span>
+                    {{/if}}
+                    {{#if (and @isTopLevel @changeset item.responseKeys)}}
+                        <Registries::ValueCheckMark
+                            @changeset={{@changeset}}
+                            @keys={{item.responseKeys}}
+                        />
+                    {{/if}}
+                </div>
+            {{/if}}
+            <Registries::UiVisualItems
+                @items={{item.children}}
+                @baseStrategy={{@baseStrategy}}
+                @tagDefs={{@tagDefs}}
+                @changeset={{@changeset}}
+            />
+        </div>
+    {{else}}
+        <Registries::SchemaBlockGroupRenderer
+            @schemaBlockGroup={{item.schemaBlockGroup}}
+            @renderStrategy={{component @baseStrategy schemaBlockGroup=item.schemaBlockGroup}}
+            @tagDefs={{@tagDefs}}
+            @changeset={{if @isTopLevel @changeset}}
+            @checkMarkKeys={{if @isTopLevel item.responseKeys}}
+        />
+    {{/if}}
+{{/each}}
