@@ -49,6 +49,7 @@ interface RouteModel {
     node: Node;
     templates: WorkflowTemplate[];
     pendingTemplates: PendingTemplate[];
+    providesTemplates: boolean;
     apiBaseUrl: string;
     templatesError?: string | null;
 }
@@ -90,6 +91,7 @@ export default class GuidNodeWorkflowRoute extends Route {
 
         let templates: WorkflowTemplate[] = [];
         let pendingTemplates: PendingTemplate[] = [];
+        let providesTemplates = false;
         let templatesError: string | null = null;
 
         try {
@@ -105,6 +107,7 @@ export default class GuidNodeWorkflowRoute extends Route {
             ]);
             templates = normalizeTemplates(activationsResponse.data);
             pendingTemplates = extractPendingTemplates(templatesResponse.data);
+            providesTemplates = templatesResponse.data.some(t => t.is_local);
         } catch (error) {
             templatesError = extractErrorMessage(error);
         }
@@ -113,6 +116,7 @@ export default class GuidNodeWorkflowRoute extends Route {
             node,
             templates,
             pendingTemplates,
+            providesTemplates,
             apiBaseUrl,
             templatesError,
         };
@@ -126,6 +130,7 @@ export default class GuidNodeWorkflowRoute extends Route {
                 node: model.node,
                 templates: model.templates,
                 pendingTemplates: model.pendingTemplates,
+                providesTemplates: model.providesTemplates,
                 apiBaseUrl: model.apiBaseUrl,
                 templatesError: model.templatesError,
             },

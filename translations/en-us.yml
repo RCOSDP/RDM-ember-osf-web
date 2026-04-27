@@ -2053,6 +2053,7 @@ workflow:
                 assignee: 'Assignee'
                 created: 'Created'
                 due: 'Due'
+                completed: 'Completed'
                 status: 'Status'
                 actions: 'Actions'
             statuses:

@@ -2053,6 +2053,7 @@ workflow:
                 assignee: 担当
                 created: 作成
                 due: 期限
+                completed: 完了
                 status: 状態
                 actions: 操作
             statuses:

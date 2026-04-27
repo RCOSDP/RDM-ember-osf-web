@@ -62,6 +62,7 @@ export interface WorkflowRouteModel {
     node: Node;
     templates: WorkflowTemplate[];
     pendingTemplates: PendingTemplate[];
+    providesTemplates: boolean;
     apiBaseUrl: string;
     templatesError?: string | null;
 }
@@ -81,10 +82,16 @@ export interface WorkflowRunSummary {
     isCancelling?: boolean;
 }
 
+export interface WorkflowAssigneeUser {
+    id: string;
+    fullname: string;
+}
+
 export interface WorkflowTaskSummary {
     id: string;
     name?: string;
     assignee?: string;
+    assignee_user?: WorkflowAssigneeUser | null;
     owner?: string;
     created?: string;
     completed?: string;

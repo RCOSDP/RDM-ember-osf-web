@@ -21,6 +21,7 @@ import {
     WorkflowTemplate,
     WorkflowVariable,
 } from './types';
+import { workflowAssigneeDisplay } from './utils';
 
 export {
     WorkflowTemplate,
@@ -119,6 +120,7 @@ export default class GuidNodeWorkflowController extends Controller {
 
     @tracked templates: WorkflowTemplate[] = [];
     @tracked pendingTemplates: PendingTemplate[] = [];
+    @tracked providesTemplates = false;
     @tracked templatesError: string | null = null;
     @tracked isRefreshing = false;
 
@@ -185,22 +187,31 @@ export default class GuidNodeWorkflowController extends Controller {
 
     get tasksWithActions(): Array<
         WorkflowTaskSummary & {
-            canComplete: boolean; assigneeDisplay: string; projectUrl: string; isCurrentProject: boolean;
+            canComplete: boolean;
+            assigneeDisplay: string;
+            assigneeUrl: string | null;
+            projectUrl: string;
+            isCurrentProject: boolean;
         }
         > {
         if (!this.node) {
             return [];
         }
         const currentNodeId = this.node.id;
-        return this.tasks.map(task => ({
-            ...task,
-            created: this.formatDate(task.created),
-            due: this.formatDate(task.due),
-            canComplete: task.can_complete !== false,
-            assigneeDisplay: this.assigneeLabel(task.assignee),
-            projectUrl: pathJoin(config.OSF.url, task.node_id),
-            isCurrentProject: task.node_id === currentNodeId,
-        }));
+        return this.tasks.map(task => {
+            const assignee = workflowAssigneeDisplay(this.intl, task.assignee, task.assignee_user, config.OSF.url);
+            return {
+                ...task,
+                created: this.formatDate(task.created),
+                due: this.formatDate(task.due),
+                completed: this.formatDate(task.completed),
+                canComplete: task.can_complete !== false,
+                assigneeDisplay: assignee.label,
+                assigneeUrl: assignee.url,
+                projectUrl: pathJoin(config.OSF.url, task.node_id),
+                isCurrentProject: task.node_id === currentNodeId,
+            };
+        });
     }
 
     get assignedTaskCount(): number {
@@ -275,6 +286,7 @@ export default class GuidNodeWorkflowController extends Controller {
         this.apiBaseUrl = ensureTrailingSlash(model.apiBaseUrl);
         this.templates = model.templates;
         this.pendingTemplates = model.pendingTemplates;
+        this.providesTemplates = model.providesTemplates;
         this.templatesError = model.templatesError || null;
 
         this.runStatusLabels = {
@@ -805,26 +817,6 @@ export default class GuidNodeWorkflowController extends Controller {
             interval = Math.min(interval * backoffFactor, maxInterval);
         }
         throw new Error('Job timed out');
-    }
-
-    private assigneeLabel(assignee?: string): string {
-        if (!assignee) {
-            return this.intl.t('workflow.console.tasks.dialog.unassigned') as string;
-        }
-        const lower = assignee.toLowerCase();
-        if (lower === 'executor') {
-            return this.intl.t('workflow.console.tasks.assignee.executor') as string;
-        }
-        if (lower === 'creator') {
-            return this.intl.t('workflow.console.tasks.assignee.creator') as string;
-        }
-        if (lower === 'manager') {
-            return this.intl.t('workflow.console.tasks.assignee.manager') as string;
-        }
-        if (lower === 'contributor') {
-            return this.intl.t('workflow.console.tasks.assignee.contributor') as string;
-        }
-        return assignee;
     }
 
     private hashForTab(tab: 'start' | 'runs' | 'tasks', selectedTemplateId: string): string {

@@ -36,7 +36,15 @@
                                     <dt>{{t 'workflow.console.tasks.columns.task'}}</dt>
                                     <dd>{{or this.taskTitle (t 'workflow.console.tasks.dialog.untitled')}}</dd>
                                     <dt>{{t 'workflow.console.tasks.columns.assignee'}}</dt>
-                                    <dd>{{this.assigneeLabel}}</dd>
+                                    <dd>
+                                        {{#if this.assigneeUrl}}
+                                            <a href={{this.assigneeUrl}} target="_blank">
+                                                {{this.assigneeLabel}}
+                                            </a>
+                                        {{else}}
+                                            {{this.assigneeLabel}}
+                                        {{/if}}
+                                    </dd>
                                     <dt>{{t 'workflow.console.tasks.dialog.startedAt'}}</dt>
                                     <dd>{{or @task.created (t 'workflow.console.tasks.dialog.notAvailable')}}</dd>
                                     <dt>{{t 'workflow.console.tasks.dialog.dueAt'}}</dt>
