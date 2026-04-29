@@ -12,6 +12,12 @@ import { layout } from 'ember-osf-web/decorators/component';
 import Analytics from 'ember-osf-web/services/analytics';
 import CurrentUser from 'ember-osf-web/services/current-user';
 
+import {
+    escapeHTML,
+    isEmail,
+    isValidDomain,
+    trimEdges,
+} from 'ember-osf-web/utils/string-utils';
 import styles from './styles';
 import template from './template';
 
@@ -75,24 +81,88 @@ export default class MaintenanceBanner extends Component {
             return htmlSafe('');
         }
 
-        const escapeHTML = (str: string) => str
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
+        const parts: string[] = text.split(/(\s+)/);
 
-        const urlRegex = /(https?:\/\/[^\s<>"]+)/g;
-
-        const result = text.split(urlRegex).map(part => {
-            if (part.match(urlRegex)) {
-                const safeUrl = escapeHTML(part);
-                return `<a href="${safeUrl}">${safeUrl}</a>`;
+        const result = parts.map((part: string) => {
+            if (!part) {
+                return '';
             }
-            return escapeHTML(part);
+
+            // preserve whitespace
+            if (/^\s+$/.test(part)) {
+                return part;
+            }
+
+            // split by dangerous characters to support partial parsing
+            const chunks = part.split(/([<>"])/);
+
+            return chunks.map((chunk: string) => {
+                if (!chunk) {
+                    return '';
+                }
+
+                // escape dangerous characters
+                if (/[<>"]/.test(chunk)) {
+                    return escapeHTML(chunk);
+                }
+
+                // extract surrounding punctuation
+                const { leading, core, trailing } = trimEdges(chunk);
+
+                if (isEmail(core)) {
+                    return `${escapeHTML(leading)}<a href="mailto:${escapeHTML(core)}">`
+                        + `${escapeHTML(core)}</a>${escapeHTML(trailing)}`;
+                }
+
+                // scheme:// (loose handling, e.g. htp://)
+                if (/^[a-zA-Z]+:\/\//.test(core)) {
+                    try {
+                        const fake = core.replace(/^([a-zA-Z]+):\/\//, 'http://');
+                        const u = new URL(fake);
+
+                        if (isValidDomain(u.hostname)) {
+                            return `${escapeHTML(leading)}<a href="${escapeHTML(core)}" rel="nofollow">`
+                            + `${escapeHTML(core)}</a>${escapeHTML(trailing)}`;
+                        }
+                    } catch {
+                        // ignore invalid URL parsing
+                    }
+
+                    // fallback: link the prefix part (no strict domain validation)
+                    const match = core.match(/^([a-zA-Z]+:\/\/([a-zA-Z0-9-]+))/);
+                    if (match) {
+                        const full = match[1];
+                        const host = match[2];
+
+                        // reject invalid host patterns
+                        if (!host.startsWith('-') && /^[a-zA-Z0-9-]+$/.test(host)) {
+                            const rest = core.slice(full.length);
+                            return `${escapeHTML(leading)}<a href="${escapeHTML(full)}" rel="nofollow">`
+                            + `${escapeHTML(full)}</a>${escapeHTML(rest + trailing)}`;
+                        }
+                    }
+
+                    return escapeHTML(chunk);
+                }
+
+                // domain (e.g. abc.com, www.google.com)
+                const domainMatch = core.match(/^((?:www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,})(?=$|[^a-zA-Z0-9-])/);
+                if (domainMatch) {
+                    const domain = domainMatch[1];
+                    const host = domain.replace(/^www\./, '');
+
+                    if (isValidDomain(host)) {
+                        const rest = core.slice(domain.length);
+                        return `${escapeHTML(leading)}<a href="http://${escapeHTML(domain)}" rel="nofollow">`
+                        + `${escapeHTML(domain)}</a>${escapeHTML(rest + trailing)}`;
+                    }
+                }
+
+                return escapeHTML(chunk);
+            }).join('');
         }).join('');
-        const withBreaks = result.replace(/\n/g, '<br>');
-        return htmlSafe(withBreaks);
+
+        return htmlSafe(result.replace(/\n/g, '<br>'));
     }
 
     didReceiveAttrs(): void {
