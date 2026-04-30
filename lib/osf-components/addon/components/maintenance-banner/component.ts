@@ -125,8 +125,9 @@ export default class MaintenanceBanner extends Component {
                         const u = new URL(fake);
 
                         if (isValidDomain(u.hostname)) {
-                            return `${escapeHTML(leading)}${escapeHTML(textBefore)}<a href="${escapeHTML(urlCandidate)}" rel="nofollow">`
-                            + `${escapeHTML(urlCandidate)}</a>${escapeHTML(trailing)}`;
+                            return `${escapeHTML(leading)}${escapeHTML(textBefore)}`
+                                + `<a href="${escapeHTML(urlCandidate)}" rel="nofollow">`
+                                + `${escapeHTML(urlCandidate)}</a>${escapeHTML(trailing)}`;
                         }
                     } catch {
                         // ignore invalid URL parsing
@@ -141,12 +142,13 @@ export default class MaintenanceBanner extends Component {
                         // reject invalid host patterns
                         if (!host.startsWith('-') && /^[a-zA-Z0-9-]+$/.test(host)) {
                             const rest = urlCandidate.slice(full.length);
-                            return `${escapeHTML(leading)}${escapeHTML(textBefore)}<a href="${escapeHTML(full)}" rel="nofollow">`
-                            + `${escapeHTML(full)}</a>${escapeHTML(rest + trailing)}`;
+                            return `${escapeHTML(leading)}${escapeHTML(textBefore)}`
+                                + `<a href="${escapeHTML(full)}" rel="nofollow">`
+                                + `${escapeHTML(full)}</a>${escapeHTML(rest + trailing)}`;
                         }
                     }
 
-                    return `${escapeHTML(leading)}${escapeHTML(chunk)}${escapeHTML(trailing)}`;
+                    return `${escapeHTML(leading)}${escapeHTML(core)}${escapeHTML(trailing)}`;
                 }
 
                 // domain (e.g. abc.com, www.google.com)
@@ -155,15 +157,17 @@ export default class MaintenanceBanner extends Component {
                     const textBefore = core.slice(0, domainIdx);
                     const urlCandidate = core.slice(domainIdx);
 
-                    const domainMatch = urlCandidate.match(/^((?:www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,})(?=$|[^a-zA-Z0-9-])/);
+                    const domainMatchRegex = /^((?:www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,})(?=$|[^a-zA-Z0-9-])/;
+                    const domainMatch = urlCandidate.match(domainMatchRegex);
                     if (domainMatch) {
                         const domain = domainMatch[1];
                         const host = domain.replace(/^www\./, '');
 
                         if (isValidDomain(host)) {
                             const rest = urlCandidate.slice(domain.length);
-                            return `${escapeHTML(leading)}${escapeHTML(textBefore)}<a href="http://${escapeHTML(domain)}" rel="nofollow">`
-                            + `${escapeHTML(domain)}</a>${escapeHTML(rest + trailing)}`;
+                            return `${escapeHTML(leading)}${escapeHTML(textBefore)}`
+                                + `<a href="http://${escapeHTML(domain)}" rel="nofollow">`
+                                + `${escapeHTML(domain)}</a>${escapeHTML(rest + trailing)}`;
                         }
                     }
                 }
