@@ -75,6 +75,9 @@ export default class RightNav extends Component {
 
                             for (const page of registrationSchema.schema.pages) {
                                 for (const question of page.questions) {
+                                    if (question.readonly) {
+                                        continue;
+                                    }
                                     const regKey = question.qid;
                                     isMetadataUsed = false;
 

@@ -1,0 +1,29 @@
+<div local-class="file-uploader" {{did-insert this.initialize}}>
+    {{#if this.loading}}
+        <div class="text-center" style="padding: 20px;">
+            <LoadingIndicator @dark={{true}} />
+        </div>
+    {{else}}
+        <FileBrowser
+            @user={{this.currentUser.user}}
+            @items={{this.files}}
+            @filter={{this.filter}}
+            @sort={{this.sort}}
+            @canEdit={{not @disabled}}
+            @dropZoneId={{this.dropZoneId}}
+            @openFile={{this.openFile}}
+            @updateFilter={{this.handleUpdateFilter}}
+            @deleteFiles={{perform this.deleteFiles}}
+            @moveFile={{this.moveFile}}
+            @renameFile={{perform this.renameFile}}
+            @addFile={{perform this.addFile}}
+            @customBuildUrl={{this.buildUrl}}
+            @dropzoneOptions={{this.dropzoneOptions}}
+        />
+        {{#if this.hasRejectedFiles}}
+            <div class="alert alert-warning" style="margin-top: 8px;">
+                Extension not allowed: {{this.rejectedFileNames}}
+            </div>
+        {{/if}}
+    {{/if}}
+</div>

@@ -27,23 +27,13 @@ export default class ValidatedText<M extends DS.Model> extends BaseValidatedComp
     readonly: boolean = defaultTo(this.readonly, false);
 
     didInsertElement() {
-        if (this.datetimeUpdated instanceof Date && !isNaN(this.datetimeUpdated.getTime())
-            && this.datetimeInitiated instanceof Date
-            && !isNaN(this.datetimeInitiated.getTime())) {
-            const diffInMs = this.datetimeUpdated.getTime() - this.datetimeInitiated.getTime();
-            const diffInMinutes = diffInMs / 1000 / 60;
-
-            if (
-                (this.retrievalTitle === 'auto_retrieval' || this.retrievalTitle === 'dual_retrieval')
-                && diffInMinutes <= 1
-            ) {
+        if (this.retrievalTitle === 'auto_retrieval' || this.retrievalTitle === 'dual_retrieval') {
+            if (!this.value) { // 空の場合のみ
                 this.set('value', this.title);
             }
-
-            if (
-                (this.retrievalDate === 'auto_retrieval' || this.retrievalDate === 'dual_retrieval')
-                && diffInMinutes <= 1
-            ) {
+        }
+        if (this.retrievalDate === 'auto_retrieval' || this.retrievalDate === 'dual_retrieval') {
+            if (!this.value) { // 空の場合のみ
                 const now = new Date();
                 const year = now.getFullYear();
                 const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -51,10 +41,7 @@ export default class ValidatedText<M extends DS.Model> extends BaseValidatedComp
 
                 this.set('value', `${year}-${month}-${date}`);
             }
-        } else {
-            // Invalid date values for datetimeInitiated or datetimeUpdated.
         }
-
         this.set('readonly', this.readonly === true);
 
         if (this.retrievalVersion !== '') {

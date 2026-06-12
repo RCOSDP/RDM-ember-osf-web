@@ -1,0 +1,33 @@
+.ArrayInput {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 12px;
+    background: #fafafa;
+}
+
+.ArrayInput__row {
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 12px;
+    background: #fff;
+}
+
+.ArrayInput__rowHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #eee;
+}
+
+.ArrayInput__rowIndex {
+    font-weight: 600;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.ArrayInput__addButton {
+    margin-top: 4px;
+}

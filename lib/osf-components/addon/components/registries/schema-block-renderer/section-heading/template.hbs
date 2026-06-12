@@ -5,11 +5,6 @@
 >
     {{this.localizedDisplayText}}
     <div local-class='HelpText'>
-        <p local-class='HelpTextLine'>{{this.schemaBlock.helpText}}</p>
+        <p local-class='HelpTextLine'>{{this.localizedHelpText}}</p>
     </div>
-    <span>
-        {{#if this.isEditableForm}}
-            <Registries::SchemaBlockRenderer::HelperTextIcon @helpText={{this.localizedHelpText}} />
-        {{/if}}
-    </span>
 </h3>

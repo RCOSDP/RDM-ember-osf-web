@@ -1,0 +1,28 @@
+.typeahead-container {
+    position: relative;
+}
+
+.typeahead-dropdown {
+    position: absolute;
+    z-index: 1000;
+    width: 100%;
+    max-height: 300px;
+    overflow-y: auto;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-top: 0;
+    border-radius: 0 0 4px 4px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.typeahead-item {
+    padding: 6px 10px;
+    cursor: pointer;
+
+    &:hover {
+        background-color: #f5f5f5;
+    }
+}

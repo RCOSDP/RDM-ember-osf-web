@@ -2,10 +2,12 @@ import { tagName } from '@ember-decorators/component';
 import Component from '@ember/component';
 import { action, computed } from '@ember/object';
 import { inject as service } from '@ember/service';
+import { htmlSafe } from '@ember/template';
 
 import Intl from 'ember-intl/services/intl';
 import { layout } from 'ember-osf-web/decorators/component';
 import { SchemaBlock } from 'ember-osf-web/packages/registration-schema';
+import { resolveTags, TagDefs } from 'ember-osf-web/packages/registration-schema/ui-group';
 import styles from './styles';
 import template from './template';
 
@@ -16,17 +18,57 @@ export default class LabelContent extends Component {
     // Required params
     schemaBlock!: SchemaBlock;
 
+    // Optional params
+    inputBlockUI?: SchemaBlock['ui'];
+    tagDefs?: TagDefs;
+    changeset?: any;
+    checkMarkKeys?: string[];
+
     // Private property
     shouldShowExample = false;
+    circleMarker = '\u25CB';
+
+    @computed('inputBlockUI')
+    get displayTextOverride(): string | undefined {
+        return this.inputBlockUI && this.inputBlockUI.sub_label;
+    }
+
+    @computed('inputBlockUI')
+    get itemMarker(): string | undefined {
+        return this.inputBlockUI && this.inputBlockUI.item && this.inputBlockUI.item.marker;
+    }
+
+    @computed('inputBlockUI')
+    get itemInfo(): ReturnType<typeof htmlSafe> | undefined {
+        const info = this.inputBlockUI && this.inputBlockUI.item && this.inputBlockUI.item.info;
+        return info ? htmlSafe(this.getLocalizedText(info)) : undefined;
+    }
+
+    @computed('inputBlockUI', 'tagDefs')
+    get itemTags() {
+        const tags = this.inputBlockUI && this.inputBlockUI.item && this.inputBlockUI.item.tags;
+        if (!tags) {
+            return undefined;
+        }
+        if (!this.tagDefs) {
+            return undefined;
+        }
+        return resolveTags(tags, this.tagDefs, text => this.getLocalizedText(text));
+    }
+
+    @action
+    preventLabelFocus(event: Event) {
+        event.preventDefault();
+    }
 
     @action
     toggleShouldShowExample() {
         this.toggleProperty('shouldShowExample');
     }
 
-    @computed('schemaBlock')
+    @computed('schemaBlock', 'displayTextOverride')
     get localizedDisplayText() {
-        const text = this.schemaBlock.displayText;
+        const text = this.displayTextOverride || this.schemaBlock.displayText;
         if (!text) {
             return text;
         }

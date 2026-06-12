@@ -7,4 +7,13 @@
 
 .array-input-remove-button {
     margin-top: 20px;
+
+    &:global(.btn) {
+        display: block;
+        margin-left: auto;
+    }
+}
+
+.array-input-add-button:first-child {
+    margin-top: 10px;
 }

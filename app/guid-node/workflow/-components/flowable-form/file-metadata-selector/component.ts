@@ -16,6 +16,7 @@ import pathJoin from 'ember-osf-web/utils/path-join';
 
 import { toStringValue } from '../field/component';
 import { FieldValueWithType } from '../types';
+import { FilterClause, matchesMetadataFilters } from '../utils';
 
 const { OSF: { url: baseURL } } = config;
 
@@ -39,7 +40,6 @@ interface FileMetadataEntry {
     lastPartDepth: number;
     folder: boolean;
     title: string | null;
-    manager: string | null;
     url: string;
     style: string;
     visible: boolean;
@@ -51,8 +51,10 @@ interface FileMetadataSelectorArgs {
     node: Node;
     schemaName: string;
     multiSelect: boolean;
+    filters: FilterClause[];
     value: FieldValueWithType | undefined;
     onChange: (valueWithType: FieldValueWithType) => void;
+    onLoadingChange?: (isLoading: boolean) => void;
     disabled: boolean;
 }
 
@@ -107,8 +109,7 @@ export default class FileMetadataSelector extends Component<FileMetadataSelector
 
         const pathSet = new Set<string>();
         this.metadataNodeProject.files.forEach((entry: FileEntry) => {
-            const item = entry.items.find(it => it.schema === this.schemaId);
-            if (item) {
+            if (this.matchingItem(entry)) {
                 let path = '';
                 const parts = entry.path.split('/');
                 parts.forEach((part, i) => {
@@ -132,14 +133,12 @@ export default class FileMetadataSelector extends Component<FileMetadataSelector
         }
 
         // Create a map of file metadata by path
-        const metadataMap: {[key: string]: { title: string | null; manager: string | null; urlpath: string }} = {};
+        const metadataMap: {[key: string]: { title: string | null; urlpath: string }} = {};
         this.metadataNodeProject.files.forEach((entry: FileEntry) => {
-            const item = entry.items.find(it => it.schema === this.schemaId);
+            const item = this.matchingItem(entry);
             if (item) {
                 const titleJa = item.data['grdm-file:title-ja'];
                 const titleEn = item.data['grdm-file:title-en'];
-                const managerJa = item.data['grdm-file:data-man-name-ja'];
-                const managerEn = item.data['grdm-file:data-man-name-en'];
 
                 let title = null;
                 if (titleJa && titleJa.value) {
@@ -148,14 +147,7 @@ export default class FileMetadataSelector extends Component<FileMetadataSelector
                     title = titleEn.value;
                 }
 
-                let manager = null;
-                if (managerJa && managerJa.value) {
-                    manager = managerJa.value;
-                } else if (managerEn && managerEn.value) {
-                    manager = managerEn.value;
-                }
-
-                metadataMap[entry.path] = { title, manager, urlpath: entry.urlpath };
+                metadataMap[entry.path] = { title, urlpath: entry.urlpath };
             }
         });
 
@@ -181,7 +173,6 @@ export default class FileMetadataSelector extends Component<FileMetadataSelector
                 lastPartDepth: parts.length,
                 folder,
                 title: metadata ? metadata.title : null,
-                manager: metadata ? metadata.manager : null,
                 url: metadata ? `${pathJoin(baseURL, metadata.urlpath)}#edit-metadata` : '',
                 style: `margin: 0 0 0 ${parts.length * 20 + (folder ? 0 : 24)}px`,
                 visible: [...parts.slice(0, parts.length - 1).keys()]
@@ -201,7 +192,10 @@ export default class FileMetadataSelector extends Component<FileMetadataSelector
     initialize() {
         if (!this.isInitialized) {
             this.isInitialized = true;
-            this.loadFileMetadata.perform();
+            if (this.args.onLoadingChange) { this.args.onLoadingChange(true); }
+            this.loadFileMetadata.perform().finally(() => {
+                if (this.args.onLoadingChange) { this.args.onLoadingChange(false); }
+            });
         }
     }
 
@@ -259,6 +253,14 @@ export default class FileMetadataSelector extends Component<FileMetadataSelector
     expandFolder(entry: FileMetadataEntry, expand: boolean): void {
         this.folderExpands[entry.path] = expand;
         this.folderExpands = { ...this.folderExpands };
+    }
+
+    private matchingItem(entry: FileEntry): MetadataItem | undefined {
+        const item = entry.items.find(it => it.schema === this.schemaId);
+        if (!item) {
+            return undefined;
+        }
+        return matchesMetadataFilters(item.data, this.args.filters) ? item : undefined;
     }
 
     private notifyFileSelected(path: string): void {

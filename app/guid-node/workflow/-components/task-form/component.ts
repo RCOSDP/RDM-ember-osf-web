@@ -6,15 +6,23 @@ import {
     WorkflowVariable,
 } from '../../types';
 import { isCedarForm, isFlowableForm } from '../../utils';
+import { extractWizardConfig, WizardNavigation } from '../wizard-form/types';
 
 interface TaskFormArgs {
     form: WorkflowTaskForm;
     variables: WorkflowVariable[];
     node?: Node;
+    taskId?: string;
     onChange: (variables: WorkflowVariable[], isValid: boolean) => void;
+    onSubmit?: () => void;
+    onWizardNavigationChange?: (nav: WizardNavigation) => void;
 }
 
 export default class TaskForm extends Component<TaskFormArgs> {
+    get hasWizardForm(): boolean {
+        return isFlowableForm(this.args.form) && extractWizardConfig(this.args.form.fields) !== null;
+    }
+
     get hasFlowableForm(): boolean {
         return isFlowableForm(this.args.form);
     }
@@ -24,6 +32,6 @@ export default class TaskForm extends Component<TaskFormArgs> {
     }
 
     get noFormAvailable(): boolean {
-        return !this.hasFlowableForm && !this.hasCedarForm;
+        return !this.hasWizardForm && !this.hasFlowableForm && !this.hasCedarForm;
     }
 }

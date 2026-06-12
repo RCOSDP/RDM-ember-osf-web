@@ -2,6 +2,7 @@ import { action } from '@ember/object';
 import { inject as service } from '@ember/service';
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
+import config from 'ember-get-config';
 
 import Intl from 'ember-intl/services/intl';
 import Node from 'ember-osf-web/models/node';
@@ -11,7 +12,9 @@ import {
     WorkflowTaskDetail,
     WorkflowVariable,
 } from '../../types';
+import { workflowAssigneeDisplay } from '../../utils';
 import { isFinalStep } from '../progress-sidebar/utils';
+import { extractWizardConfig, WizardNavigation } from '../wizard-form/types';
 
 interface WorkflowTaskDialogArgs {
     open: boolean;
@@ -29,6 +32,7 @@ export default class WorkflowTaskDialog extends Component<WorkflowTaskDialogArgs
     @service intl!: Intl;
     @tracked formVariables: WorkflowVariable[] = [];
     @tracked isFormValid = true;
+    @tracked wizardNav: WizardNavigation | null = null;
 
     get hasTask(): boolean {
         return Boolean(this.args.task);
@@ -43,25 +47,26 @@ export default class WorkflowTaskDialog extends Component<WorkflowTaskDialogArgs
     }
 
     get assigneeLabel(): string {
+        return this.assigneeDisplayResult.label;
+    }
+
+    get assigneeUrl(): string | null {
+        return this.assigneeDisplayResult.url;
+    }
+
+    private get assigneeDisplayResult() {
         const { task } = this.args;
-        const assignee = task && task.assignee;
-        if (!assignee) {
-            return this.intl.t('workflow.console.tasks.dialog.unassigned') as string;
-        }
-        const lower = assignee.toLowerCase();
-        if (lower === 'executor') {
-            return this.intl.t('workflow.console.tasks.assignee.executor') as string;
-        }
-        if (lower === 'creator') {
-            return this.intl.t('workflow.console.tasks.assignee.creator') as string;
-        }
-        if (lower === 'manager') {
-            return this.intl.t('workflow.console.tasks.assignee.manager') as string;
-        }
-        if (lower === 'contributor') {
-            return this.intl.t('workflow.console.tasks.assignee.contributor') as string;
-        }
-        return assignee;
+        return workflowAssigneeDisplay(
+            this.intl,
+            task && task.assignee,
+            task && task.assignee_user,
+            config.OSF.url,
+        );
+    }
+
+    get isWizardMode(): boolean {
+        const { task } = this.args;
+        return Boolean(task && task.form && extractWizardConfig(task.form.fields));
     }
 
     get canComplete(): boolean {
@@ -81,6 +86,11 @@ export default class WorkflowTaskDialog extends Component<WorkflowTaskDialogArgs
     handleFormChange(variables: WorkflowVariable[], isValid: boolean): void {
         this.formVariables = variables;
         this.isFormValid = isValid;
+    }
+
+    @action
+    handleWizardNavigationChange(nav: WizardNavigation): void {
+        this.wizardNav = nav;
     }
 
     @action

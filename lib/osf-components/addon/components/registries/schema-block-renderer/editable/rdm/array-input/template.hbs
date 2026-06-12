@@ -2,25 +2,23 @@
 
     {{#each this.subChangesets as |subChangeset|}}
         <div local-class='array-input-item-container'>
-            {{#each @schemaBlockGroup.children as |group|}}
-                <Registries::SchemaBlockGroupRenderer
-                    @schemaBlockGroup={{group}}
-                    @renderStrategy={{
-                        component
-                        'registries/schema-block-renderer/editable/mapper'
-                        changeset=subChangeset
-                        node=@node
-                        onInput=@onInput
-                        metadataChangeset=this.draftManager.metadataChangeset
-                        metadataNodeErad=this.draftManager.metadataNodeErad
-                        metadataNodeProject=this.draftManager.metadataNodeProject
-                        onMetadataInput=@onMetadataInput
-                        draftManager=this.draftManager
-                        schemaBlockGroup=group
-                    }}
+            {{#let (component 'registries/schema-block-renderer/editable/mapper'
+                changeset=subChangeset
+                node=@node
+                onInput=@onInput
+                metadataChangeset=this.draftManager.metadataChangeset
+                metadataNodeErad=this.draftManager.metadataNodeErad
+                metadataNodeProject=this.draftManager.metadataNodeProject
+                onMetadataInput=@onMetadataInput
+                draftManager=this.draftManager
+            ) as |baseStrategy|}}
+                <Registries::UiVisualItems
+                    @items={{this.visualItems}}
+                    @baseStrategy={{baseStrategy}}
                 />
-            {{/each}}
+            {{/let}}
             <OsfButton local-class='array-input-remove-button'
+              @type='danger'
               @onClick={{action this.onRemove subChangeset}}
             >
                 {{this.schemaBlock.rowAdditionCaption}}{{t 'metadata.array-input.remove-item'}}

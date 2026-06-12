@@ -1,0 +1,20 @@
+<div {{did-insert this.initialize}}>
+    {{#if this.loadProviders.isRunning}}
+        <div class="text-muted">
+            <i class="fa fa-spinner fa-spin"></i>
+            {{t 'workflow.console.tasks.dialog.exportTarget.loading'}}
+        </div>
+    {{else}}
+        <select
+            class="form-control"
+            disabled={{@disabled}}
+            {{on "change" this.destinationChanged}}
+        >
+            {{#each this.providers as |provider|}}
+                <option value={{provider.name}} selected={{eq this.selectedProvider provider.name}}>
+                    {{provider.name}}
+                </option>
+            {{/each}}
+        </select>
+    {{/if}}
+</div>
