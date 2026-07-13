@@ -89,7 +89,7 @@ export default class Dashboard extends Controller {
         const user: User = yield this.currentUser.user;
 
         const nodes: QueryHasManyResult<Node> = yield user.queryHasMany('sparseNodes', {
-            embed: ['parent', 'root'],
+            embed: ['parent', 'root', 'creator'],
             fields: {
                 users: 'full_name,given_name,middle_names,family_name',
                 'sparse-nodes': 'id,title,date_modified,bibliographic_contributors,parent,root,creator',
