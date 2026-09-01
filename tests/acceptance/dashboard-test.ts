@@ -45,7 +45,7 @@ module('Acceptance | dashboard', hooks => {
 
         assert.equal(currentURL(), '/dashboard', 'We stayed on the proper page');
         assert.dom('nav.navbar').exists();
-        assert.dom('nav.navbar .service-name').hasText('OSF HOME');
+        assert.dom('nav.navbar .service-name').hasText('OSF');
         assert.dom('nav.navbar .secondary-nav-dropdown .nav-profile-name')
             .hasText(currentUser.fullName, 'User\'s name is in navbar');
 

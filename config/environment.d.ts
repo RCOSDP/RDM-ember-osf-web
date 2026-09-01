@@ -74,6 +74,7 @@ declare const config: {
         backend: string;
         redirectUri?: string;
         url: string;
+        oasysUrl: string;
         webApiNamespace: string;
         apiUrl: string;
         apiVersion: string;

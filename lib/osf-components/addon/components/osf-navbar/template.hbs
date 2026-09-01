@@ -21,9 +21,6 @@
                         @href={{this._activeService.href}}
                     >
                         <span class='hidden-xs'> {{t 'general.OSF' title=this.title}} </span>
-                        {{#if this.useNavDropdown}}
-                            <span class='current-service'><strong>{{this._activeService.name}}</strong></span>
-                        {{/if}}
                     </OsfLink>
                 </div>
 
@@ -50,7 +47,7 @@
                                         @route={{service.route}}
                                         @href={{service.href}}
                                     >
-                                        {{t 'general.OSF' title=this.title}}<b>{{service.name}}</b>
+                                        {{service.label}}
                                     </OsfLink>
                                 </ddm.item>
                             {{/each}}

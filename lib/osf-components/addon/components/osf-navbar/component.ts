@@ -12,35 +12,28 @@ import defaultTo from 'ember-osf-web/utils/default-to';
 import styles from './styles';
 import template from './template';
 
-const osfURL = config.OSF.url;
+const oasysURL = config.OSF.oasysUrl;
+const { pageName } = config.OSF;
 
 export enum OSFService {
     HOME = 'HOME',
-    PREPRINTS = 'PREPRINTS',
-    REGISTRIES = 'REGISTRIES',
-    MEETINGS = 'MEETINGS',
-    INSTITUTIONS = 'INSTITUTIONS',
+    JAIRO_CLOUD = 'JAIRO Cloud公開支援機能',
 }
 
 interface ServiceLink {
     name: string;
+    label: string;
     route?: string;
     href?: string;
     disabled?: boolean;
 }
 
 export const OSF_SERVICES: ServiceLink[] = [
-    { name: OSFService.HOME, route: 'home' },
-    { name: OSFService.PREPRINTS, href: `${osfURL}preprints/` },
-    { name: OSFService.REGISTRIES, route: 'registries', disabled: true },
-    { name: OSFService.MEETINGS, route: 'meetings' },
-    { name: OSFService.INSTITUTIONS, route: 'institutions' },
+    { name: OSFService.HOME, label: pageName, route: 'home' },
+    ...(oasysURL ? [{ name: OSFService.JAIRO_CLOUD, label: OSFService.JAIRO_CLOUD, href: oasysURL }] : []),
 ];
 
 const {
-    OSF: {
-        pageName,
-    },
     navbar: {
         useDropdown,
     },

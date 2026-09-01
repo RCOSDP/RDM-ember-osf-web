@@ -27,7 +27,7 @@ module('Integration | Component | osf-navbar', hooks => {
     test('it renders', async assert => {
         await render(hbs`{{osf-navbar}}`);
         assert.dom('.service-name').includesText('OSF');
-        assert.dom('.current-service').hasText('HOME');
+        assert.dom('.current-service').doesNotExist();
     });
 
     test('service-dropdown: logged in', async function(assert) {

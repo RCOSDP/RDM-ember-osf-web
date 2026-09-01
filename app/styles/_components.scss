@@ -799,11 +799,6 @@
                 font-size: 24px;
             }
         }
-
-        /* Decreases distance between "OSF" and current service "PREPRINTS", for example */
-        .current-service {
-            margin-left: -4px;
-        }
     }
 
     /* Overrides the color, relative position, and font size of dropdown menus (both service and auth) */
@@ -813,10 +808,14 @@
         &.service-dropdown {
             top: 17px;
             left: -120px;
-            width: 200px;
+            width: auto;
 
             li>a {
                 font-size: 18px;
+            }
+
+            @media (max-width: 767px) {
+                left: -54px;
             }
         }
 
@@ -849,6 +848,10 @@
             content: '';
             top: -8px;
             left: 126px;
+
+            @media (max-width: 767px) {
+                left: 61px;
+            }
         }
     }
 
