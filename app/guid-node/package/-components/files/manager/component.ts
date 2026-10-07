@@ -3,7 +3,7 @@ import Component from '@ember/component';
 import { assert } from '@ember/debug';
 import EmberError from '@ember/error';
 import { action, computed } from '@ember/object';
-import { alias } from '@ember/object/computed';
+import { alias, reads } from '@ember/object/computed';
 import { inject as service } from '@ember/service';
 import { camelize } from '@ember/string';
 import { task } from 'ember-concurrency-decorators';
@@ -57,7 +57,7 @@ export default class WaterButlerFilesManagerComponent extends Component
     nestedFolders: WaterButlerFile[] = [];
     sort: SortKey = 'date_modified';
 
-    @alias('node.userHasAdminPermission') canEdit!: boolean;
+    @reads('node.userHasAdminPermission') canEdit!: boolean;
     @alias('getRootItems.isRunning') loading!: boolean;
     @alias('getCurrentFolderItems.isRunning') loadingFolderItems!: boolean;
 
